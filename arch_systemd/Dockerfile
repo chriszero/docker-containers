@@ -6,7 +6,7 @@ RUN pacman -Sydd --noconfirm systemd \
 	kmod \
 	libseccomp
 
-RUN pacman -cc --noconfirm
+RUN pacman -Scc --noconfirm
 
 RUN systemctl mask dev-mqueue.mount dev-hugepages.mount \
     systemd-remount-fs.service sys-kernel-config.mount \
@@ -24,7 +24,7 @@ rm -f /lib/systemd/system/basic.target.wants/*;
 
 ADD dbus.service /etc/systemd/system/dbus.service
 
-RUN rm -r /tmp/*; rm -r /var/log/*; 
+RUN rm -rf /tmp/*; rm -f /var/log/pacman.log; 
 
 VOLUME ["/sys/fs/cgroup"]
 VOLUME ["/run"]
