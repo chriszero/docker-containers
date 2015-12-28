@@ -9,7 +9,7 @@ export LANGUAGE="de_DE:de"
 export LC_ALL="de_DE.UTF-8" 
 
 apt-get install -qy build-essential \
-	mysql-common libmysqlclient-dev libmysqlclient18 zlib1g zlib1g-dev
+	mysql-common libmysqlclient-dev libmysqlclient20 zlib1g zlib1g-dev
 
 cd /tmp/epglv && \
 	make all && \
