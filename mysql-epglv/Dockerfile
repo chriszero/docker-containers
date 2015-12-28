@@ -1,4 +1,4 @@
-FROM mysql:5.6
+FROM mysql:5.7
 
 RUN mkdir -p /tmp/epglv/src
 ADD epglv/* /tmp/epglv/

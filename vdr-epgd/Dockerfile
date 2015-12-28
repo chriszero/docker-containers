@@ -3,6 +3,9 @@ MAINTAINER chriszero <zerov83@gmail.com>
 
 # Set correct environment variables.
 ENV DEBIAN_FRONTEND noninteractive
+ENV LANG de_DE.UTF-8  
+ENV LANGUAGE de_DE:de  
+ENV LC_ALL de_DE.UTF-8
 
 ADD tvm-http.diff /tmp/
 ADD setup_epgd.sh /tmp/
