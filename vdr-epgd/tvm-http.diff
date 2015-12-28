@@ -1,0 +1,2166 @@
+diff -Naur -x .git vdr-epg-daemon.orig/PLUGINS/tvm/Makefile vdr-epg-daemon/PLUGINS/tvm/Makefile
+--- vdr-epg-daemon.orig/PLUGINS/tvm/Makefile	1970-01-01 01:00:00.000000000 +0100
++++ vdr-epg-daemon/PLUGINS/tvm/Makefile	2014-04-03 11:22:25.000000000 +0200
+@@ -0,0 +1,62 @@
++#
++# Makefile
++#
++# See the README file for copyright information and how to reach the author.
++#
++#
++
++EPGD_SRC ?= ../..
++
++include $(EPGD_SRC)/Make.config
++
++PLUGIN = tvm
++VERSION = $(shell grep 'define TVM_VERSION ' $(PLUGIN).h | awk '{ print $$3 }' | sed -e 's/[";]//g')
++ARCHIVE = $(PLUGIN)-$(VERSION)-$(shell date +%Y%m%d-%H%M)
++
++SOFILE = libepgd-tvm.so
++OBJS = tvm.o 
++
++CFLAGS += -I$(EPGD_SRC) -Wno-long-long
++
++all: $(SOFILE)
++
++$(SOFILE): $(OBJS)
++	$(CC) $(CFLAGS) -shared $(OBJS) $(LIBS) -o $@
++
++install:  $(SOFILE) install-config
++	install -D $(SOFILE) $(PLGDEST)/
++
++clean:
++	@-rm -f $(OBJS) core* *~ *.so
++	rm -f ./configs/*~
++	rm -f tvm-*.tgz
++
++install-config:
++	if ! test -d $(CONFDEST); then \
++	   mkdir -p $(CONFDEST); \
++	   chmod a+rx $(CONFDEST); \
++	fi
++	for i in `ls ./configs/tvmovie*.xsl`; do\
++	   if ! test -f "$(CONFDEST)/$$i"; then\
++	      install --mode=644 -D "$$i" $(CONFDEST)/; \
++	   fi;\
++	done;
++	for i in `ls ./configs/tvmovie*.xml`; do\
++	   if ! test -f "$(CONFDEST)/$$i"; then\
++	      install --mode=644 -D "$$i" $(CONFDEST)/; \
++	   fi;\
++	done;
++
++dist: clean
++	@-rm -rf $(TMPDIR)/$(ARCHIVE)
++	@mkdir $(TMPDIR)/$(ARCHIVE)
++	@cp -a * $(TMPDIR)/$(ARCHIVE)
++	@tar czf $(ARCHIVE).tgz -C $(TMPDIR) $(ARCHIVE)
++	@-rm -rf $(TMPDIR)/$(ARCHIVE)
++	@echo Distribution package created as $(ARCHIVE).tgz
++
++#***************************************************************************
++# dependencies
++#***************************************************************************
++
++tvm.o : tvm.c  tvm.h
+diff -Naur -x .git vdr-epg-daemon.orig/PLUGINS/tvm/configs/channelmap-merge.conf vdr-epg-daemon/PLUGINS/tvm/configs/channelmap-merge.conf
+--- vdr-epg-daemon.orig/PLUGINS/tvm/configs/channelmap-merge.conf	1970-01-01 01:00:00.000000000 +0100
++++ vdr-epg-daemon/PLUGINS/tvm/configs/channelmap-merge.conf	2014-03-17 14:04:56.000000000 +0100
+@@ -0,0 +1,378 @@
++// Format:
++//  <source>:<extid>[:<map>[:<vps>]] = <cid1>[,<cid2>[,<cid3>]]
++//
++//
++// <source>   'vdr' or the source name provided by a plugin
++// <extid>    000 for vdr or the channle id used by the external EPG provider
++// <map>      Map DVB and externel EPG for this channel
++//            { y, Y, n, N, 0, 1 } (default 1, default for vdr is 0)
++// <vps>      { y, Y, n, N, 0, 1 } (default 0)
++// <cid>      VDR ChannelID (Src-NID-TID-SID)
++//
++//
++// channes not listed here will not touched by the plugin
++//  if 'blacklist' in plugin options set to 'yes' the plugin will block all.
++//  event data of the DVB stream since the channel is not listed here
++//
++//
++// get this channels from DVB stream
++//
++//
++vdr:000 = S19.2E-1-1066-28656 // VH1
++vdr:000 = S19.2E-133-6-267  // Sky Bundesliga HD 2
++vdr:000 = S19.2E-133-13-277 // Sky Bundesliga HD 3
++vdr:000 = S19.2E-133-12-287 // Sky Bundesliga HD 4
++vdr:000 = S19.2E-133-11-297 // Sky Bundesliga HD 5
++vdr:000 = S19.2E-133-10-307 // Sky Bundesliga HD 6
++vdr:000 = S19.2E-133-14-317 // Sky Bundesliga HD 7
++vdr:000 = S19.2E-133-14-327 // Sky Bundesliga HD 8
++vdr:000 = S19.2E-133-10-337 // Sky Bundesliga HD 9
++vdr:000 = S19.2E-133-14-257 // Sky Bundesliga HD 10
++vdr:000 = S19.2E-133-10-102 // Sky HD FanZone
++vdr:000 = S19.2E-133-6-268  // Sky Sport HD 3
++vdr:000 = S19.2E-133-13-278 // Sky Sport HD 4
++vdr:000 = S19.2E-133-12-288 // Sky Sport HD 5
++vdr:000 = S19.2E-133-11-298 // Sky Sport HD 6
++vdr:000 = S19.2E-133-10-308 // Sky Sport HD 7
++vdr:000 = S19.2E-133-14-318 // Sky Sport HD 8
++vdr:000 = S19.2E-133-14-328 // Sky Sport HD 9
++vdr:000 = S19.2E-133-10-338 // Sky Sport HD 10
++vdr:000 = S19.2E-133-14-258 // Sky Sport HD 11
++vdr:000 = S19.2E-133-10-309 // Sport1 US HD1
++//
++//
++tvm:1 = S19.2E-1-1019-10301	//	Das Erste HD
++epgdata:71:2 = S19.2E-1-1019-10301	//	Das Erste HD
++//
++tvm:2 = S19.2E-1-1011-11110	//	ZDF HD
++epgdata:37:2 = S19.2E-1-1011-11110	//	ZDF HD
++//
++tvm:9 = S19.2E-1-1201-28327	//	WDR Dortmund HD
++epgdata:46:2 = S19.2E-1-1201-28327	//	WDR Dortmund HD
++//
++// HD+
++tvm:3 = S19.2E-1-1057-61200	//	RTL HD
++epgdata:38:2 = S19.2E-1-1057-61200	//	RTL HD
++//
++tvm:4 = S19.2E-1-1017-61300	//	SAT.1 HD
++epgdata:39:2 = S19.2E-1-1017-61300	//	SAT.1 HD
++//
++tvm:43 = S19.2E-1-1057-61205	//	RTL2 HD
++epgdata:41:2 = S19.2E-1-1057-61205	//	RTL2 HD
++//
++tvm:11 = S19.2E-1-1017-61301	//	ProSieben HD
++epgdata:40:2 = S19.2E-1-1017-61301	//	ProSieben HD
++//
++tvm:13 = S19.2E-1-1041-11931	//	SUPER RTL HD
++epgdata:43:2 = S19.2E-1-1041-11931	//	SUPER RTL HD
++//
++tvm:39 = S19.2E-1-1017-61302	//	kabel eins HD
++epgdata:44:2 = S19.2E-1-1017-61302	//	kabel eins HD
++//
++tvm:46 = S19.2E-1-1057-61201	//	VOX HD
++epgdata:42:2 = S19.2E-1-1057-61201	//	VOX HD
++//
++tvm:55 = S19.2E-1-1109-5401	//	TELE 5 HD
++epgdata:277:2 = S19.2E-1-1109-5401	//	TELE 5 HD
++//
++tvm:45 = S19.2E-1-1057-61204	//	SPORT1 HD
++epgdata:64:2 = S19.2E-1-1057-61204	//	SPORT1 HD
++//
++tvm:69:0 = S19.2E-1-1053-21107	//	NICK HD
++tvm:14:0 = S19.2E-1-1053-21107	//	Comedy Central HD
++//epgdata:589:2 = S19.2E-1-1053-21107	//	Nickelodeon / Comedy Central
++//
++tvm:52 = S19.2E-1-1109-5402	//	DMAX HD
++epgdata:507:2 = S19.2E-1-1109-5402	//	DMAX HD
++//
++tvm:31 = S19.2E-1-1053-21108	//	N24 HD
++epgdata:175:2 = S19.2E-1-1053-21108	//	N24 HD
++//
++tvm:318 = S19.2E-1-1017-61303	//	SIXX HD
++epgdata:694:2 = S19.2E-1-1017-61303	//	SIXX HD
++//
++//
++tvm:38 = S19.2E-1-1019-10302	//	arte HD
++epgdata:58:2 = S19.2E-1-1019-10302	//	arte HD
++//
++tvm:12 = S19.2E-1-1010-11150	//	3sat HD
++epgdata:56:2 = S19.2E-1-1010-11150	//	3sat HD
++//
++tvm:47 = S19.2E-1-1089-12090	//	n-tv
++epgdata:66:2 = S19.2E-1-1089-12090	//	n-tv
++//
++tvm:48:0 = S19.2E-1-1091-31220	//	EuroNews
++//epgdata:68:2 = S19.2E-1-1091-31220	//	EuroNews
++//
++tvm:125:0 = S19.2E-1-1026-10067	//	Bloomberg Europe TV
++//epgdata:127:2 = S19.2E-1-1026-10067	//	Bloomberg Europe TV
++//
++tvm:42:0 = S19.2E-1-1068-28522	//	CNN Int.
++//epgdata:69:2 = S19.2E-1-1068-28522	//	CNN Int.
++//
++tvm:30 = S19.2E-133-11-132	//	Eurosport HD
++epgdata:65:2 = S19.2E-133-11-132	//	Eurosport HD
++//
++tvm:56 = S19.2E-1-1093-28487	//	BR-alpha
++epgdata:104:2 = S19.2E-1-1093-28487	//	BR-alpha
++//
++tvm:123 = S19.2E-1-1039-10377	//	EinsPlus HD
++epgdata:475:2 = S19.2E-1-1039-10377	//	EinsPlus HD
++//
++tvm:122 = S19.2E-1-1039-10376	//	EinsFestival HD
++epgdata:146:2 = S19.2E-1-1039-10376	//	EinsFestival HD
++//
++tvm:128 = S19.2E-1-1039-10375	//	tagesschau24 HD
++epgdata:100:2 = S19.2E-1-1039-10375	//	tagesschau24 HD
++//
++tvm:294 = S19.2E-1-1011-11130	//	zdf_neo HD
++epgdata:659:2 = S19.2E-1-1011-11130	//	zdf_neo HD
++//
++tvm:137 = S19.2E-1-1010-11170	//	ZDFinfo HD
++epgdata:276:2 = S19.2E-1-1010-11170	//	ZDFinfo HD
++//
++tvm:378 = S19.2E-1-1011-11140	//	zdf.kultur HD
++epgdata:275:2 = S19.2E-1-1011-11140	//	zdf.kultur HD
++//
++tvm:60 = S19.2E-1-1025-10331	//	PHOENIX HD
++epgdata:194:2 = S19.2E-1-1025-10331	//	PHOENIX HD
++//
++// Sky HD
++tvm:270 = S19.2E-133-6-131	//	Sky Cinema HD
++epgdata:610:2 = S19.2E-133-6-131	//	Sky Cinema HD
++//
++tvm:274 = S19.2E-133-11-116	//	Sky Action HD
++epgdata:613:2 = S19.2E-133-11-116	//	Sky Action HD
++//
++tvm:273 = S19.2E-133-12-107	//	Sky Cinema Hits HD
++epgdata:10059:2 = S19.2E-133-12-107	//	Sky Cinema Hits HD
++//
++tvm:151 = S19.2E-133-12-115	//	MGM HD
++epgdata:1196:2 = S19.2E-133-12-115	//	MGM HD
++//
++tvm:88 = S19.2E-133-13-127	//	13th Street HD
++epgdata:471:2 = S19.2E-133-13-127	//	13th Street HD
++//
++tvm:267 = S19.2E-133-11-123	//	TNT Serie HD
++epgdata:590:2 = S19.2E-133-11-123	//	TNT Serie HD
++//
++tvm:264 = S19.2E-133-10-124	//	Fox HD
++epgdata:565:2 = S19.2E-133-10-124	//	Fox HD
++//
++tvm:154 = S19.2E-133-12-126	//	Syfy HD
++epgdata:472:2 = S19.2E-133-12-126	//	Syfy HD
++//
++tvm:190 = S19.2E-133-13-112	//	NatGeo HD
++epgdata:624:2 = S19.2E-133-13-112	//	NatGeo HD
++//
++tvm:284 = S19.2E-133-6-118	//	Nat Geo Wild HD
++epgdata:626:2 = S19.2E-133-6-118	//	Nat Geo Wild HD
++//
++tvm:279 = S19.2E-133-13-111	//	Disney Cinemagic HD
++epgdata:630:2 = S19.2E-133-13-111	//	Disney Cinemagic HD
++//
++tvm:111 = S19.2E-1-1055-5500	//	Disney Channel HD
++epgdata:139:2 = S19.2E-1-1055-5500	//	Disney Channel HD
++//
++tvm:289 = S19.2E-133-6-129	//	Sky Sport HD 1
++epgdata:619:2 = S19.2E-133-6-129	//	Sky Sport HD 1
++//
++tvm:290 = S19.2E-133-13-114	//	Sky Sport HD 2
++epgdata:620:2 = S19.2E-133-13-114	//	Sky Sport HD 2
++//
++tvm:177 = S19.2E-133-10-125	//	AXN HD
++epgdata:468:2 = S19.2E-133-10-125	//	AXN HD
++//
++tvm:181 = S19.2E-133-11-113	//	History HD
++epgdata:632:2 = S19.2E-133-11-113	//	History HD
++//
++tvm:199hd = S19.2E-133-6-130	//	Discovery HD
++epgdata:490:2 = S19.2E-133-6-130	//	Discovery HD
++//
++tvm:271 = S19.2E-133-2-11	//	Sky Cinema +1
++epgdata:611:2 = S19.2E-133-2-11		//	Sky Cinema +1
++//
++tvm:272 = S19.2E-133-2-43	//	Sky Cinema +24
++epgdata:612:2 = S19.2E-133-2-43		//	Sky Cinema +24
++//
++tvm:276 = S19.2E-133-2-8	//	Sky Comedy
++epgdata:617:2 = S19.2E-133-2-8		//	Sky Comedy
++//
++tvm:275 = S19.2E-133-2-20	//	Sky Emotion
++epgdata:616:2 = S19.2E-133-2-20		//	Sky Emotion
++//
++tvm:278 = S19.2E-133-1-23	//	Sky Krimi
++epgdata:615:2 = S19.2E-133-1-23		//	Sky Krimi
++//
++tvm:277 = S19.2E-133-3-516	//	Sky Nostalgie
++epgdata:614:2 = S19.2E-133-3-516	//	Sky Nostalgie
++//
++tvm:89 = S19.2E-133-17-22	//	Heimatkanal
++epgdata:154:2 = S19.2E-133-17-22	//	Heimatkanal
++//
++tvm:285 = S19.2E-133-4-52	//	Spiegel Geschichte
++epgdata:625:2 = S19.2E-133-4-52		//	Spiegel Geschichte
++//
++tvm:113 = S19.2E-133-17-518	//	Goldstar TV
++epgdata:152:2 = S19.2E-133-17-518	//	Goldstar TV
++//
++tvm:95 = S19.2E-133-17-24	//	Classica
++epgdata:133:2 = S19.2E-133-17-24	//	Classica
++//
++tvm:127 = S19.2E-133-17-21	//	Beate-Uhse.TV
++epgdata:123:2 = S19.2E-133-17-21	//	Beate-Uhse.TV
++//
++tvm:96 = S19.2E-133-17-19	//	Junior
++epgdata:160:2 = S19.2E-133-17-19	//	Junior
++//
++tvm:171 = S19.2E-133-17-26	//	Disney Junior
++epgdata:460:2 = S19.2E-133-17-26	//	Disney Junior
++//
++tvm:288 = S19.2E-133-12-105	//	Sky Bundesliga HD 1
++epgdata:623:2 = S19.2E-133-12-105	//	Sky Bundesliga HD 1
++//
++tvm:286 = S19.2E-133-1-30	//	Sky Sport Austria
++epgdata:622:2 = S19.2E-133-1-30		//	Sky Sport Austria
++//
++tvm:73 = S19.2E-1-1078-28676	//	VIVA Germany
++epgdata:266:2 = S19.2E-1-1078-28676	//	VIVA Germany
++//
++tvm:32 = S19.2E-133-8-135	//	MTV HD
++epgdata:70:2 = S19.2E-133-8-135		//	MTV HD
++//
++tvm:5 = S19.2E-1-1025-10325	//	BR Süd HD
++epgdata:51:2 = S19.2E-1-1025-10325	//	BR Süd HD
++//
++tvm:7 = S19.2E-1-1061-10355	//	hr-fernsehen HD
++epgdata:49:2 = S19.2E-1-1061-10355	//	hr-fernsehen HD
++//
++tvm:41 = S19.2E-1-1061-10354	//	MDR Thüringen HD
++epgdata:48:2 = S19.2E-1-1061-10354	//	MDR Thüringen HD
++//
++tvm:57 = S19.2E-1-1061-10351	//	rbb Berlin HD
++epgdata:52:2 = S19.2E-1-1061-10351	//	rbb Berlin HD
++//
++tvm:8 = S19.2E-1-1019-10303	//	SWR BW HD
++epgdata:50:2 = S19.2E-1-1019-10303	//	SWR BW HD
++//
++tvm:6 = S19.2E-1-1025-10329	//	NDR FS HH HD
++epgdata:47:2 = S19.2E-1-1025-10329	//	NDR FS HH HD
++//
++tvm:76 = S19.2E-1-1010-11160	//	KiKA HD
++epgdata:57:2 = S19.2E-1-1010-11160	//	KiKA HD
++//
++tvm:53 = S19.2E-133-33-40	//	HSE24
++epgdata:159:2 = S19.2E-133-33-40	//	HSE24
++//
++tvm:54:0 = S19.2E-1-1108-12100	//	QVC Deutschland
++//epgdata:208:2 = S19.2E-1-1108-12100	//	QVC Deutschland
++//
++tvm:201 = S19.2E-133-14-128	//	E! Entertainm. HD
++epgdata:758:2 = S19.2E-133-14-128	//	E! Entertainm. HD
++//
++tvm:182 = S19.2E-133-15-33	//	Kinowelt TV
++epgdata:450:2 = S19.2E-133-15-33	//	Kinowelt TV
++//
++tvm:220 = S19.2E-133-15-35	//	TNT Film (TCM)
++epgdata:633:2 = S19.2E-133-15-35	//	TNT Film (TCM)
++//
++tvm:265 = S19.2E-133-15-38	//	Romance TV
++epgdata:552:2 = S19.2E-133-15-38	//	Romance TV
++//
++tvm:211 = S19.2E-133-15-56	//	Boomerang
++//epgdata:493:2 = S19.2E-133-15-56	//	Boomerang
++//
++tvm:209 = S19.2E-1-1107-17506	//	kabel eins classics
++epgdata:492:2 = S19.2E-1-1107-17506	//	kabel eins classics
++//
++tvm:214 = S19.2E-133-1-27	//	RTL Crime
++epgdata:527:2 = S19.2E-133-1-27		//	RTL Crime
++//
++tvm:216 = S19.2E-133-1-29	//	RTL Passion
++epgdata:529:2 = S19.2E-133-1-29		//	RTL Passion
++//
++tvm:215 = S19.2E-1-1089-12030	//	RTL Living
++epgdata:528:2 = S19.2E-1-1089-12030	//	RTL Living
++//
++tvm:222:0 = S19.2E-1-1037-5253	//	Animax
++//epgdata:539:2 = S19.2E-1-1037-5253	//	Animax
++//
++tvm:219 = S19.2E-133-15-39	//	Cartoon Network (S)
++epgdata:531:2 = S19.2E-133-15-39	//	Cartoon Network (S)
++//
++//tvm:xxx = S19.2E-1-1078-28682	//	Nicktoons (S)
++//epgdata:xxx:2 = S19.2E-1-1078-28682	//	Nicktoons (S)
++//
++tvm:287 = S19.2E-133-1-168	//	Motorvision TV
++epgdata:627:2 = S19.2E-133-1-168	//	Motorvision TV
++//
++tvm:239 = S19.2E-133-14-109	//	Eurosport 2 HD
++epgdata:504:2 = S19.2E-133-14-109	//	Eurosport 2 HD
++//
++tvm:292 = S19.2E-133-17-28	//	Disney XD
++epgdata:657:2 = S19.2E-133-17-28	//	Disney XD
++//
++tvm:218 = S19.2E-133-15-57	//	Biography Channel
++epgdata:536:2 = S19.2E-133-15-57	//	Biography Channel
++//
++tvm:314 = S19.2E-1-1082-20007	//	PULS 4 Austria
++epgdata:402:2 = S19.2E-1-1082-20007	//	PULS 4 Austria
++//
++//tvm:692 = S19.2E-133-15-59	//	sportdigital
++//epgdata:564:2 = S19.2E-133-15-59	//	sportdigital
++//
++tvm:316 = S19.2E-1-1007-4914,S19.2E-1-1007-4913		//	ServusTV HD Deutschland,ServusTV HD Oesterreich
++epgdata:660:2 = S19.2E-1-1007-4914,S19.2E-1-1007-4913		//	ServusTV HD Deutschland,ServusTV HD Oesterreich
++//
++tvm:269 = S19.2E-1-1053-21100	//	ANIXE HD
++epgdata:537:2 = S19.2E-1-1053-21100	//	ANIXE HD
++//
++tvm:427 = S19.2E-1-1089-12061	//	RTLNITRO
++epgdata:763:2 = S19.2E-1-1089-12061	//	RTLNITRO
++//
++tvm:428 = S19.2E-1-1015-4701	//	SAT.1 emotions
++epgdata:766:2 = S19.2E-1-1015-4701	//	SAT.1 emotions
++//
++tvm:429 = S19.2E-133-13-110	//	Sky Atlantic HD
++epgdata:767:2 = S19.2E-133-13-110	//	Sky Atlantic HD
++//
++tvm:430 = S19.2E-1-1107-17504	//	SAT.1 Gold
++epgdata:774:2 = S19.2E-1-1107-17504	//	SAT.1 Gold
++//
++tvm:436 = S19.2E-1-1107-17505	//	ProSieben MAXX
++epgdata:783:2 = S19.2E-1-1107-17505	//	ProSieben MAXX
++//
++tvm:441 = S19.2E-133-14-101	//	Universal HD
++epgdata:10139:2 = S19.2E-133-14-101	//	Universal HD
++//
++tvm:411 = S19.2E-133-12-108	//	Sky Sport News HD
++epgdata:762:2 = S19.2E-133-12-108	//	Sky Sport News HD
++//
++tvm:420 = S19.2E-133-11-122	//	Sport1+ HD
++epgdata:698:2 = S19.2E-133-11-122	//	Sport1+ HD
++//
++tvm:431 = S19.2E-133-14-106	//	Pro7 FUN HD
++epgdata:765 = S19.2E-133-14-106		//	Pro7 FUN HD
++//
++tvm:440 = S19.2E-133-10-119	//	Sport1 US HD
++epgdata:784 = S19.2E-133-10-119		//	Sport1 US HD
++//
++tvm:380 = S19.2E-133-8-134	//	MTV Live HD
++epgdata:601 = S19.2E-133-8-134		//	MTV Live HD
++//
++// ORF
++tvm:16 = S19.2E-1-1007-4911	//	ORF1 HD
++epgdata:54:2 = S19.2E-1-1007-4911	//	ORF1 HD
++//
++tvm:17 = S19.2E-1-1007-4912	//	ORF2 HD
++epgdata:55:2 = S19.2E-1-1007-4912	//	ORF2 HD
++//
++tvm:129 = S19.2E-1-1003-13228	//	ATV HD
++epgdata:115:2 = S19.2E-1-1003-13228	//	ATV HD
++//
++//
++// epgdata
++epgdata:761 = S19.2E-1-1003-13223	//	ATV2
++epgdata:759 = S19.2E-1-1003-13221	//	ORF SPORT+
++epgdata:757 = S19.2E-1-1115-13101	//	ORF III
++epgdata:701 = S19.2E-133-10-117		//	Sky 3D
+diff -Naur -x .git vdr-epg-daemon.orig/PLUGINS/tvm/configs/channelmap-tvm-only.conf vdr-epg-daemon/PLUGINS/tvm/configs/channelmap-tvm-only.conf
+--- vdr-epg-daemon.orig/PLUGINS/tvm/configs/channelmap-tvm-only.conf	1970-01-01 01:00:00.000000000 +0100
++++ vdr-epg-daemon/PLUGINS/tvm/configs/channelmap-tvm-only.conf	2014-03-17 14:01:04.000000000 +0100
+@@ -0,0 +1,218 @@
++//
++// ChannelMap for EPG Daemon
++// --------------------------
++//
++// Format:
++//  <source>:<extid>[:<map>[:<vps>]] = <cid1>[,<cid2>[,<cid3>]]
++//
++//
++// <source>   'vdr' or the source name provided by a plugin
++// <extid>    000 for vdr or the channle id used by the external EPG provider
++// <map>      Map DVB and externel EPG for this channel
++//            { y, Y, n, N, 0, 1 } (default 1, default for vdr is 0)
++// <vps>      { y, Y, n, N, 0, 1 } (default 0)
++// <cid>      VDR ChannelID (Src-NID-TID-SID)
++
++//
++// channes not listed here will not touched by the plugin
++//  if 'blacklist' in plugin options set to 'yes' the plugin will block all 
++//  event data of the DVB stream since the channel is not listed here
++
++//
++// get this channels from DVB stream
++
++vdr:000:0:0 = S19.2E-1-1003-13223 // ATV2
++
++tvm:1 = S19.2E-1-1101-28106,S19.2E-1-1019-10301		// ARD
++tvm:2 = S19.2E-1-1079-28006,S19.2E-1-1011-11110		// ZDF
++tvm:3 = S19.2E-1-1089-12003,S19.2E-1-1057-61200		// RTL
++tvm:4 = S19.2E-1-1107-17500,S19.2E-1-1017-61300 	// SAT1
++tvm:11 = S19.2E-1-1107-17501,S19.2E-1-1017-61301	// PRO7
++tvm:43 = S19.2E-1-1089-12020,S19.2E-1-1057-61205	// RTL II
++tvm:13 = S19.2E-1-1089-12040,S19.2E-1-1041-11931	// S RTL
++tvm:39 = S19.2E-1-1107-17502,S19.2E-1-1017-61302	// Kabel
++tvm:12 = S19.2E-1-1079-28007,S19.2E-1-1010-11150	// 3SAT
++tvm:46 = S19.2E-1-1089-12060,S19.2E-1-1057-61201	// VOX
++tvm:9 = S19.2E-1-1201-28307,S19.2E-1-1201-28327		// WDR
++tvm:6 = S19.2E-1-1073-28225,S19.2E-1-1025-10329		// NDR
++tvm:57 = S19.2E-1-1073-28206,S19.2E-1-1061-10351	// RBB
++tvm:41 = S19.2E-1-1073-28230,S19.2E-1-1061-10354	// MDR
++tvm:7 = S19.2E-1-1101-28108,S19.2E-1-1061-10355		// H3
++tvm:8 = S19.2E-1-1101-28113,S19.2E-1-1019-10303		// SWR
++tvm:5 = S19.2E-1-1101-28107,S19.2E-1-1025-10325		// B3
++tvm:76 = S19.2E-1-1079-28008,S19.2E-1-1010-11160	// Ki.Ka
++tvm:38 = S19.2E-1-1051-28724,S19.2E-1-1019-10302	// Arte
++// tvm:45 = 		// DSF
++tvm:48:0 = S19.2E-1-1091-31220				// EURONEWS
++tvm:30 = S19.2E-1-1091-31200,S19.2E-133-11-132		// EUROSPORT
++tvm:47 = S19.2E-1-1089-12090				// NTV
++tvm:31 = S19.2E-1-1107-17503,S19.2E-1-1053-21108	// N24
++tvm:60 = S19.2E-1-1051-28725,S19.2E-1-1025-10331	// Phoenix
++tvm:42:0 = S19.2E-1-1068-28522				// CNN
++tvm:73 = S19.2E-1-1078-28676				// VIVA
++tvm:32 = S19.2E-133-8-135				// MTV
++tvm:55 = S19.2E-133-33-51,S19.2E-1-1109-5401		// Tele5
++tvm:52 = S19.2E-133-33-63,S19.2E-1-1109-5402		// DMAX/XXP
++tvm:53 = S19.2E-133-33-40				// Home Shopping Europe
++tvm:54:0 = S19.2E-1-1108-12100				// QVC
++tvm:16 = S19.2E-1-1117-13001,S19.2E-1-1007-4911		// ORF 1
++tvm:17 = S19.2E-1-1117-13002,S19.2E-1-1007-4912		// ORF 2
++// tvm:24 = 		// SF 1
++// tvm:35 = 		// SF 2
++// tvm:18 = 		// DK1
++// tvm:19 = 		// DK2
++// tvm:21 = 		// NL1
++// tvm:22 = 		// NL2
++// tvm:23 = 		// NL3
++// tvm:33 = 		// TV5
++tvm:56 = S19.2E-1-1093-28487				// BR Alpha
++tvm:122 = S19.2E-1-1051-28722,S19.2E-1-1039-10376	// EinsFestival
++tvm:123 = S19.2E-1-1051-28723,S19.2E-1-1039-1037	// EinsMuXx/Plus
++tvm:128 = S19.2E-1-1051-28721				// EinsExtra
++tvm:199 = S19.2E-133-4-14				// Discovery Channel/HD
++tvm:111 = S19.2E-133-17-34,S19.2E-133-11-116		// Disney Channel
++tvm:96 = S19.2E-133-17-19				// Junior
++//tvm:98 = 		// Planet
++tvm:154 = S19.2E-133-17-36,S19.2E-133-12-126		// SCI FI
++tvm:151 = S19.2E-133-3-515,S19.2E-133-12-115		// MGM
++tvm:88 = S19.2E-133-1-42,S19.2E-133-13-127		// 13th Street
++tvm:95 = S19.2E-133-17-24				// Classica
++tvm:113 = S19.2E-133-17-518				// Goldstar TV
++tvm:89 = S19.2E-133-17-22				// Heimatkanal
++tvm:127 = S19.2E-133-17-21				// Beate-Uhse-TV
++// tvm:158 = 		// Animal Planet
++tvm:129 = S19.2E-1-1117-13012,S19.2E-1-1003-13228	// ATV+
++tvm:137 = S19.2E-1-1079-28011,S19.2E-1-1010-11170	// ZDFInfo
++tvm:69:0 = S19.2E-1-1078-28680,S19.2E-1-1053-21107	// Nick
++tvm:177 = S19.2E-133-15-37,S19.2E-133-10-125		// AXN
++tvm:182 = S19.2E-133-15-33				// Kinowelt TV
++// tvm:185 = 		// Silverline
++// tvm:156 = S19.2E-1-1108-12122	// Bibel-TV
++tvm:125:0 = S19.2E-1-1026-10067				// BloombergTV
++tvm:61:0 = S19.2E-1-1026-10050				// BBC
++tvm:171 = S19.2E-133-17-26				// Playhouse Disney
++// tvm:174 = 		// MTV Hits
++tvm:181 = S19.2E-133-15-58				// History Channel
++// tvm:183 = 		// K-TV
++tvm:187 = S19.2E-1-1066-28657				// VH1 Classic
++tvm:189 = S19.2E-1-1066-28655				// MTV Dance
++tvm:190 = S19.2E-133-4-13				// National Geographic
++// tvm:153 = 		// Extreme Sports Channel
++// tvm:188 = 		// Wetter Fernsehen
++// tvm:186 = 		// tv.gusto premium
++// tvm:184 = 		// Motors TV
++// tvm:205 = 		// Gute Laune TV
++// tvm:206 = 		// Trace.TV
++// tvm:201 = 		// E! Entertainment Television
++tvm:209 = S19.2E-1-1107-17506				// kabel eins classics
++tvm:211 = S19.2E-133-15-56				// Boomerang
++tvm:199hd = S19.2E-133-6-130				// Discovery HD
++tvm:214 = S19.2E-133-1-27				// RTL Crime
++tvm:215 = S19.2E-1-1089-12030				// RTL Living
++tvm:216 = S19.2E-133-1-29				// RTL Passion
++tvm:14:0 = S19.2E-1-1078-28680,S19.2E-1-1053-21107	// Comedy Central
++tvm:219 = S19.2E-133-15-39				// Cartoon Network
++tvm:218 = S19.2E-133-15-57				// The Biography Channel
++tvm:220 = S19.2E-133-15-35				// Turner Classic Movies/TNT Film/TCM
++// tvm:221 = 		// MEZZO
++tvm:222 = S19.2E-53-1097-2047				// Animax
++tvm:239 = S19.2E-133-14-109				// Eurosport 2
++// tvm:240 = 		// MTV Base
++// tvm:225 = 		// MTV Music
++// tvm:232 = 		// MCM Top
++// tvm:235 = 		// Baby TV
++// tvm:234 = 		// The Karaoke Channel
++// tvm:229 = 		// Tier TV
++// tvm:241 = 		// ATV Avrupa
++// tvm:242 = 		// Detski Mir / Teleclub
++// tvm:243 = 		// Euro D
++// tvm:244 = 		// Euro Star
++// tvm:246 = 		// iTVN
++// tvm:250 = 		// RTR-Planeta
++// tvm:254 = 		// TV Polonia
++// tvm:255 = 		// TVP Info
++// tvm:256 = 		// TVP Kultura
++// tvm:249 = 		// Nashe Kino
++// tvm:252 = 		// Show Turk
++// tvm:251 = 		// RTVi
++// tvm:253 = 		// T?rkmax
++tvm:238 = S19.2E-1-1055-5503,S19.2E-133-7-65		// DELUXE MUSIC TV
++// tvm:247 = 		// Kanal 7 Int
++tvm:264 = S19.2E-133-1-16,S19.2E-133-10-124		// FOX Channel
++tvm:265 = S19.2E-133-15-38				// Romance TV
++// tvm:268 = 		// TIMM
++tvm:269 = S19.2E-1-1053-21100				// Anixe HD
++tvm:270 = S19.2E-133-2-10				// SKY Cinema
++tvm:272 = S19.2E-133-2-43				// SKY Cinema +24
++tvm:273 = S19.2E-133-3-41				// SKY Cinema Hits
++tvm:274 = S19.2E-133-2-9				// SKY Action
++tvm:275 = S19.2E-133-2-20				// SKY Emotion
++tvm:276 = S19.2E-133-2-8				// SKY Comedy
++tvm:278 = S19.2E-133-1-23				// SKY Krimi
++tvm:271 = S19.2E-133-2-11				// SKY Cinema +1
++tvm:277 = S19.2E-133-3-516				// SKY Nostalgie
++// tvm:286 = 		// SKY Sport Austria
++// tvm:288 = 		// SKY Fu?ball Bundesliga
++tvm:289 = S19.2E-133-4-221,S19.2E-133-6-129		// SKY Sport 1
++tvm:290 = S19.2E-133-4-222,S19.2E-133-13-114		// SKY Sport 2
++tvm:270hd = S19.2E-133-6-131				// SKY Cinema HD
++// tvm:281 = S19.2E-133-6-129				// SKY Sport HD
++tvm:284 = S19.2E-133-4-12,S19.2E-133-6-118		// National Geographic Wild
++tvm:279 = S19.2E-133-3-25				// Disney Cinemagic
++tvm:285 = S19.2E-133-4-52				// Spiegel Geschichte
++tvm:267 = S19.2E-133-1-50,S19.2E-133-11-123		// TNT Serie
++// tvm:291 = 		// TGRT EU
++tvm:283 = S19.2E-133-13-112				// National Geographic HD
++tvm:292 = S19.2E-133-17-28				// Disney XD
++// tvm:296 = 		// fashiontv HD
++// tvm:263 = 		// sportdigital.tv
++tvm:294 = S19.2E-1-1079-28014,S19.2E-1-1011-11130	// ZDFneo
++tvm:279hd = S19.2E-133-13-111		// Disney Cinemagic HD
++tvm:293 = S19.2E-1-1091-31200,S19.2E-133-11-132	// Eurosport HD
++tvm:318 = S19.2E-133-5-776,S19.2E-1-1017-61303		// Sixx
++// tvm:259 = 		// Sonnenklar.TV
++tvm:181hd = S19.2E-133-11-113				// HISTORY HD
++tvm:287 = S19.2E-133-1-168				// MOTORVISION TV
++// tvm:297 = 		// LUST PUR
++// tvm:299 = 		// BBC Entertainment
++// tvm:300 = 		// OKTO TV
++tvm:301 = S19.2E-1-1115-13102				// gotv
++// tvm:305 = 		// AutoMotorSportChannel
++// tvm:311 = 		// yourfamilyentertainment
++tvm:314 = S19.2E-1-1082-20007				// PULS 4
++// tvm:315 = S19.2E-133-13-114				// SKY Sport HD 2/Datei leer
++tvm:273hd = S19.2E-133-12-107				// SKY Cinema Hits HD
++tvm:274hd = S19.2E-133-11-116				// SKY Action HD
++// tvm:310 = 		// Nick jr.
++// tvm:257 = 		// iMusic1
++tvm:298:0 = S19.2E-133-33-661				// Astro TV
++// tvm:236 = 		// LUXE.TV
++tvm:316 = S19.2E-1-1007-4914,S19.2E-1-1007-4913,S19.2E-1-1115-13110,S19.2E-1-1115-13111		// ServusTV
++// tvm:381 = 		// MezzoLive HD
++tvm:378 = S19.2E-1-1079-28016,S19.2E-1-1011-11140	// ZDF Kultur
++// tvm:382 = 		// KidsCo
++// tvm:383 = 		// Hustler TV
++tvm:428 = S19.2E-1-1015-4701				// Sat.1 Emotions
++tvm:427 = S19.2E-1-1089-12061				// RTL Nitro
++tvm:429 = S19.2E-133-17-34,S19.2E-133-13-110		// Sky Atlantic HD
++tvm:430 = S19.2E-1-1107-17504				// Sat.1 Gold
++// tvm:406 = 		// Spiegel TV Wissen
++// tvm:421 = 		// Glitz*
++tvm:411 = S19.2E-133-12-108				// Sky Sport News HD
++tvm:436 = S19.2E-1-1107-17505,S19.2E-1-1017-61304	// ProSieben Maxx
++tvm:441 = S19.2E-133-14-101				// Universal Channel
++tvm:420 = S19.2E-133-11-122				// Sport1+
++// tvm:307 = 		// DAF
++// tvm:319 = 		// Fine Living Network
++// tvm:435 = 		// Fuel TV
++// tvm:309 = 		// JimJam
++// tvm:224 = 		// Jukebox
++tvm:380 = S19.2E-133-8-134				// MTV Live
++// tvm:227 = 		// nicktoons
++// tvm:379 = 		// Powert?rk
++tvm:431 = S19.2E-133-14-106				// ProSieben Fun
++// tvm:437 = 		// RIC
++// tvm:223 = 		// Rock TV
++// tvm:439 = 		// Sony Entertainment
++tvm:440 = S19.2E-133-10-119				// Sport1 US
++// tvm:20 = 		// TV Een
+diff -Naur -x .git vdr-epg-daemon.orig/PLUGINS/tvm/configs/epgd.conf vdr-epg-daemon/PLUGINS/tvm/configs/epgd.conf
+--- vdr-epg-daemon.orig/PLUGINS/tvm/configs/epgd.conf	1970-01-01 01:00:00.000000000 +0100
++++ vdr-epg-daemon/PLUGINS/tvm/configs/epgd.conf	2014-03-06 17:35:13.000000000 +0100
+@@ -0,0 +1,6 @@
++
++# ---------------
++# tvm plugin
++# ---------------
++
++# ... no options yet ...
+diff -Naur -x .git vdr-epg-daemon.orig/PLUGINS/tvm/configs/tvmovie-category.xml vdr-epg-daemon/PLUGINS/tvm/configs/tvmovie-category.xml
+--- vdr-epg-daemon.orig/PLUGINS/tvm/configs/tvmovie-category.xml	1970-01-01 01:00:00.000000000 +0100
++++ vdr-epg-daemon/PLUGINS/tvm/configs/tvmovie-category.xml	2014-04-03 11:19:48.000000000 +0200
+@@ -0,0 +1,150 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<mapping>
++	<!-- Das mapping ist folgendermassen zu lesen:
++		<category name="Serie">
++			<contains>serie</contains>
++			<contains>soap</contains>
++		</category>
++		Wenn der Kategorietext aus dem tvm-Daten serie oder soap enthält, dann ordne das der Kategorie Serie zu, also schreibe <category>Serie</category>
++		
++		Die Wörte innerhalb von contains müssen kleingeschrieben werden.
++		Die Reihenfolge der catgory-tags ist wichtig! Krimiserie wird daher zu serie eingeordnet, da Serie vor Spielfilm kommt
++	-->
++
++	<categories>
++		<category name="Serie">
++			<contains>reihe</contains>
++			<contains>serie</contains>
++			<contains>telenovela</contains>
++			<contains>soap</contains>
++			<contains>zeichentrick</contains>
++			<contains>arzt-hospital</contains>
++			<contains>clips</contains>
++			<contains>sitcom</contains>
++		</category>
++		<category name="Sport">
++			<contains>poker</contains>
++			<contains>tennis</contains>
++			<contains>formel 1</contains>
++			<contains>eishockey</contains>
++			<contains>golf</contains>
++			<contains>wrestling</contains>
++			<contains>segeln</contains>
++			<contains>nascar</contains>
++			<contains>snowboard</contains>
++			<contains>curling</contains>
++			<contains>motorrad</contains>
++			<contains>darts</contains>
++			<contains>bowling</contains>
++			<contains>eisschnelllauf</contains>
++			<contains>billard</contains>
++			<contains>cricket</contains>
++			<contains>biathlon</contains>
++			<contains>ball</contains>
++			<contains>boxen</contains>
++			<contains>ski</contains>
++			<contains>sport</contains>
++		</category>
++		<category name="Show">
++			<contains>lotterie</contains>
++			<contains>preisverleihung</contains>
++			<contains>volksfest</contains>
++			<contains>zirkus</contains>
++			<contains>gala</contains>
++			<contains>quiz</contains>
++			<contains>show</contains>
++			<contains>unterhal</contains>
++		</category>
++		<category name="Kinder">
++			<contains>kinder</contains>
++			<contains>märchen</contains>
++		</category>
++		<category name="Kultur &amp; Musik">
++			<contains>impressionen</contains>
++			<contains>literatur</contains>
++			<contains>festival</contains>
++			<contains>musical</contains>
++			<contains>theater</contains>
++			<contains>sketch</contains>
++			<contains>lustspiel</contains>
++			<contains>schwank</contains>
++			<contains>konzert</contains>
++			<contains>oper</contains>
++			<contains>comedy</contains>
++			<contains>kabarett</contains>
++			<contains>kunst</contains>
++			<contains>musik</contains>
++			<contains>satire</contains>
++		</category>
++		<category name="Information">
++			<contains>dokumenta</contains>
++		</category>
++		<category name="Spielfilm">
++			<contains>action</contains>
++			<contains>drama</contains>
++			<contains>film</contains>
++			<contains>fiction</contains>
++			<contains>horror</contains>
++			<contains>krimi</contains>
++			<contains>komödie</contains>
++			<contains>thriller</contains>
++			<contains>movie</contains>
++		</category>
++		<category name="Information">
++			<contains>interview</contains>
++			<contains>sitzung</contains>
++			<contains>ansprache</contains>
++			<contains>gottesdienst</contains>
++			<contains>bürgersendung</contains>
++			<contains>informationen</contains>
++			<contains>umwelt</contains>
++			<contains>geschichte</contains>
++			<contains>tiere</contains>
++			<contains>technik</contains>
++			<contains>verkehr</contains>
++			<contains>recht</contains>
++			<contains>porträt</contains>
++			<contains>gespräch</contains>
++			<contains>vortrag</contains>
++			<contains>bericht</contains>
++			<contains>bildung</contains>
++			<contains>boulevard</contains>
++			<contains>diskussion</contains>
++			<contains>doku</contains>
++			<contains>forschung</contains>
++			<contains>magazin</contains>
++			<contains>nachrichten</contains>
++			<contains>natur</contains>
++			<contains>polit</contains>
++			<contains>ratgeber</contains>
++			<contains>reise</contains>
++			<contains>report</contains>
++			<contains>reportage</contains>
++			<contains>soziales</contains>
++			<contains>wetter</contains>
++			<contains>wissen</contains>
++			<contains>wirtschaft</contains>
++			<contains>information</contains>
++			<contains>pr.-info</contains>
++			<contains>mode</contains>
++			<contains>sprachkurs</contains>
++                        <contains>rückblick</contains>
++		</category>
++		<category name="Sonstiges">
++			<contains>aa</contains>
++			<contains>wunschprogramm</contains>
++			<contains>werbung</contains>
++			<contains>sendeschlu</contains>
++			<contains>sonstiges</contains>
++			<contains>zusammenfassung</contains>
++			<contains>sammelsendung</contains>
++		</category>
++	</categories>
++
++</mapping>
++
++<!--
++			<contains>esskultur</contains>
++			<contains>religion</contains>
++-->
++
+diff -Naur -x .git vdr-epg-daemon.orig/PLUGINS/tvm/configs/tvmovie-iso-8859-1.xsl vdr-epg-daemon/PLUGINS/tvm/configs/tvmovie-iso-8859-1.xsl
+--- vdr-epg-daemon.orig/PLUGINS/tvm/configs/tvmovie-iso-8859-1.xsl	1970-01-01 01:00:00.000000000 +0100
++++ vdr-epg-daemon/PLUGINS/tvm/configs/tvmovie-iso-8859-1.xsl	2014-04-03 11:19:49.000000000 +0200
+@@ -0,0 +1,8 @@
++<xsl:stylesheet version="1.0"
++                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
++                xmlns="http://www.w3.org/TR/xhtml1/strict">
++<xsl:output method="xml" omit-xml-declaration="no" encoding='iso-8859-15'/>
++
++<xsl:include href="tvmovie.xsl" />
++
++</xsl:stylesheet>
+diff -Naur -x .git vdr-epg-daemon.orig/PLUGINS/tvm/configs/tvmovie-utf-8.xsl vdr-epg-daemon/PLUGINS/tvm/configs/tvmovie-utf-8.xsl
+--- vdr-epg-daemon.orig/PLUGINS/tvm/configs/tvmovie-utf-8.xsl	1970-01-01 01:00:00.000000000 +0100
++++ vdr-epg-daemon/PLUGINS/tvm/configs/tvmovie-utf-8.xsl	2014-04-03 11:19:49.000000000 +0200
+@@ -0,0 +1,8 @@
++<xsl:stylesheet version="1.0"
++                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
++                xmlns="http://www.w3.org/TR/xhtml1/strict">
++<xsl:output method="xml" omit-xml-declaration="no" encoding='utf-8'/>
++
++<xsl:include href="tvmovie.xsl" />
++
++</xsl:stylesheet>
+diff -Naur -x .git vdr-epg-daemon.orig/PLUGINS/tvm/configs/tvmovie.xsl vdr-epg-daemon/PLUGINS/tvm/configs/tvmovie.xsl
+--- vdr-epg-daemon.orig/PLUGINS/tvm/configs/tvmovie.xsl	1970-01-01 01:00:00.000000000 +0100
++++ vdr-epg-daemon/PLUGINS/tvm/configs/tvmovie.xsl	2014-10-13 12:13:34.000000000 +0200
+@@ -0,0 +1,351 @@
++<xsl:stylesheet version="1.0"
++                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
++                xmlns="http://www.w3.org/TR/xhtml1/strict"
++                xmlns:date="http://exslt.org/dates-and-times">
++
++<xsl:variable name="mapping" select="document('tvmovie-category.xml')/mapping" />
++<xsl:variable name="categorieMapping" select="$mapping/categories/category/contains" />
++<xsl:variable name="curYear" select="substring(//Sendung/Beginn,1,4)" />
++<xsl:variable name="dststart" select="concat($curYear,'-03-',32-date:day-in-week(concat($curYear,'-03-31')),'T02:00:00')"/>
++<xsl:variable name="dstend" select="concat($curYear,'-10-',32-date:day-in-week(concat($curYear,'-10-31')),'T03:00:00')"/>
++
++
++<xsl:template match="/">
++
++<events>
++
++    <xsl:for-each select="//Sendung">
++
++      <xsl:if test="number(SendungID) = SendungID">
++
++	<event>
++
++	<xsl:attribute name="id"><xsl:value-of select="SendungID"/></xsl:attribute>
++
++<!--
++-->
++
++	<starttime>
++	    <xsl:call-template name="date2UTC"><xsl:with-param name="date" select="translate(Beginn,' ','T')"/></xsl:call-template>
++	</starttime>
++
++	<duration><xsl:value-of select="substring-before(Dauer,' ')*60"/></duration>
++
++	<xsl:if test="string-length(VPS)"><vps><xsl:value-of select="date:seconds(translate(VPS,' ','T'))"/></vps></xsl:if>
++
++
++	<title><xsl:value-of select="Titel"/></title>
++
++	<xsl:if test="string-length(Originaltitel)"><shorttext><xsl:value-of select="Originaltitel"/></shorttext></xsl:if>
++
++	<xsl:if test="string-length(Herstellungsjahr)"><year><xsl:value-of select="Herstellungsjahr"/></year></xsl:if>
++	<xsl:if test="string-length(Herstellungsland)"><country><xsl:value-of select="Herstellungsland"/></country></xsl:if>
++
++
++        <xsl:choose>
++            <xsl:when test="Bewertung = 4">
++                <tipp>[TagesTipp]</tipp>
++            </xsl:when>
++            <xsl:when test="Bewertung = 3">
++                <tipp>[TopTipp]</tipp>
++            </xsl:when>
++            <xsl:when test="Bewertung = 2">
++                <tipp>[Tipp]</tipp>
++            </xsl:when>
++        </xsl:choose>
++
++
++        <xsl:variable name="rating">
++            <xsl:call-template name="Bewertungen">
++                <xsl:with-param name="str" select="concat(Bewertungen,';')"/>
++            </xsl:call-template>
++        </xsl:variable>
++
++        <xsl:if test="string-length($rating)">
++            <rating>
++                <xsl:value-of select="$rating" />
++            </rating>
++        </xsl:if>
++
++
++        <xsl:call-template name="mapping">
++            <xsl:with-param name="str" select="Keywords" />
++            <xsl:with-param name="default" select="Kategorietext" />
++        </xsl:call-template>
++
++<!--
++	<xsl:if test="string-length(Keywords)"><topic><xsl:value-of select="Keywords"/></topic></xsl:if>
++-->
++
++        <xsl:if test="string-length(Genre)">
++            <xsl:choose>
++                <xsl:when test="substring(Genre,string-length(Genre)-5) = 'sserie' and
++                not(contains('aeiou',substring(Genre,string-length(Genre)-6,1)))">
++                    <genre><xsl:value-of select="substring(Genre,1,string-length(Genre)-6)"/></genre>
++                </xsl:when>
++                <xsl:when test="substring(Genre,string-length(Genre)-4) = 'serie'">
++                    <genre><xsl:value-of select="substring(Genre,1,string-length(Genre)-5)"/></genre>
++                </xsl:when>
++                <xsl:when test="substring(Genre,string-length(Genre)-5) = '-Serie'">
++                    <genre><xsl:value-of select="substring(Genre,1,string-length(Genre)-6)"/></genre>
++                </xsl:when>
++                <xsl:when test="substring(Genre,string-length(Genre)-5) = 'sreihe' and
++                    not(contains('aeiou',substring(Genre,string-length(Genre)-6,1)))">
++                        <genre><xsl:value-of select="substring(Genre,1,string-length(Genre)-6)"/></genre>
++                </xsl:when>
++                <xsl:when test="substring(Genre,string-length(Genre)-4) = 'reihe'">
++                    <genre><xsl:value-of select="substring(Genre,1,string-length(Genre)-5)"/></genre>
++                </xsl:when>
++                <xsl:otherwise>
++                    <genre><xsl:value-of select="Genre"/></genre>
++                </xsl:otherwise>
++            </xsl:choose>
++        </xsl:if>
++
++
++        <xsl:variable name="AUDIO">
++            <xsl:if test="KzDolby=1"><xsl:text> Dolby</xsl:text></xsl:if>
++            <xsl:if test="KzDolbySurround=1"><xsl:text> DolbySurround</xsl:text></xsl:if>
++            <xsl:if test="KzDolbyDigital=1"><xsl:text> DolbyDigital</xsl:text></xsl:if>
++            <xsl:if test="KzStereo=1"><xsl:text> Stereo</xsl:text></xsl:if>
++            <xsl:if test="KzZweikanalton=1"><xsl:text> Zweikanal</xsl:text></xsl:if>
++        </xsl:variable>
++
++
++	<xsl:if test="string-length($AUDIO)"><audio><xsl:value-of select="normalize-space($AUDIO)"/></audio></xsl:if>
++
++
++        <xsl:variable name="FLAGS">
++            <xsl:if test="KzHDTV=1"><xsl:text> [HDTV]</xsl:text></xsl:if>
++            <xsl:if test="Kz16zu9=1"><xsl:text> [16:9]</xsl:text></xsl:if>
++            <xsl:if test="KzSchwarzweis=1"><xsl:text> [SchwarzWeiss]</xsl:text></xsl:if>
++            <xsl:if test="KzUntertitel=1"><xsl:text> [Untertitel]</xsl:text></xsl:if>
++            <xsl:if test="KzAudiodescription=1"><xsl:text> [Audiodeskription]</xsl:text></xsl:if>
++            <xsl:if test="KzLive=1"><xsl:text> [Live]</xsl:text></xsl:if>
++        </xsl:variable>
++
++	<xsl:if test="string-length($FLAGS)"><flags><xsl:value-of select="normalize-space($FLAGS)"/></flags></xsl:if>
++
++
++        <xsl:variable name="sr" select="Kurzkritik"/>
++
++        <xsl:variable name="SHORTREVIEW">
++          <xsl:if test="string-length($sr) and $sr != 'HDTV'">
++            <xsl:value-of select="$sr"/>
++          </xsl:if>
++        </xsl:variable>
++
++        <xsl:if test="string-length($SHORTREVIEW)"><shortreview><xsl:value-of select="$SHORTREVIEW"/></shortreview></xsl:if>
++
++
++        <xsl:variable name="ld" select="Beschreibung"/>
++
++        <xsl:variable name="LONGDESCRIPTION">
++          <xsl:if test="string-length($ld)">
++            <xsl:choose>
++              <xsl:when test="contains(substring-after(substring($ld, string-length($ld)-45),'Dies ist die '),' Episode')">
++                <xsl:value-of select="normalize-space(substring-before($ld,concat('Dies ist die ',substring-after(substring($ld, string-length($ld)-45),'Dies ist die '))))"/>
++              </xsl:when>
++              <xsl:otherwise>
++                <xsl:value-of select="$ld"/>
++              </xsl:otherwise>
++            </xsl:choose>
++          </xsl:if>
++        </xsl:variable>
++
++	<xsl:if test="string-length($LONGDESCRIPTION)"><longdescription><xsl:value-of select="$LONGDESCRIPTION"/></longdescription></xsl:if>
++
++
++        <xsl:variable name="sd0" select="KurzBeschreibung"/>
++
++        <xsl:variable name="sd1">
++          <xsl:if test="string-length($sd0) and $sd0 != 'HDTV'">
++            <xsl:choose>
++              <xsl:when test="substring-before($sd0, ' ') = 'HDTV,'">
++                <xsl:value-of select="substring-after($sd0, ' ')"/>
++              </xsl:when>
++              <xsl:otherwise>
++                <xsl:value-of select="$sd0"/>
++              </xsl:otherwise>
++            </xsl:choose>
++          </xsl:if>
++        </xsl:variable>
++
++        <xsl:variable name="SHORTDESCRIPTION">
++          <xsl:choose>
++	    <xsl:when test="string-length($sd1) and string-length($SHORTREVIEW) and substring($sd1,1,string-length($SHORTREVIEW)) = $SHORTREVIEW">
++	      <xsl:value-of select="substring-after(substring($sd1,string-length($SHORTREVIEW)),' ')"/>
++	    </xsl:when>
++    	    <xsl:otherwise>
++	      <xsl:value-of select="$sd1"/>
++    	    </xsl:otherwise>
++          </xsl:choose>
++        </xsl:variable>
++
++	<xsl:if test="string-length($SHORTDESCRIPTION) and substring($SHORTDESCRIPTION,1,string-length($SHORTDESCRIPTION)-4) != substring($LONGDESCRIPTION,1,string-length($SHORTDESCRIPTION)-4)">
++	  <shortdescription>
++	    <xsl:value-of select="$SHORTDESCRIPTION"/>
++	  </shortdescription>
++	</xsl:if>
++
++
++	<xsl:if test="string-length(FSK)"><parentalrating><xsl:value-of select="FSK"/></parentalrating></xsl:if>
++	<xsl:if test="string-length(Bewertung) and Bewertung &gt; 0"><numrating><xsl:value-of select="Bewertung"/></numrating></xsl:if>
++
++        <xsl:if test="string-length(Darsteller)">
++            <xsl:call-template name="group2tag">
++                <xsl:with-param name="str">
++                    <xsl:call-template name="grouping">
++                        <xsl:with-param name="str" select="concat(Darsteller,';')"/>
++                        <xsl:with-param name="values" select="'[Moderator][Moderation]:moderator;[Regie]:director;[Gast][Gaststar]:guest;[Drehbuch]:screenplay;[Musik]:music;[Produzent]:producer;[Kamera]:camera;[Schnitt])[Szenen-/Bühnenbild])[Produktionsfirma])[Autor])[Kostüm])[Buch])[Ausstattung])[Spezialeffekte])[Filmverleih])[Ton])[Casting])[Regie-Assistenz])[Spezialpersonen])[Stunts])[Verantwortlich])[Choreograph])[Komponist])[Redner])[Cameoauftritt]):other;:actor'"/>
++                    </xsl:call-template>
++                    <xsl:text>;</xsl:text>
++                </xsl:with-param>
++            </xsl:call-template>
++        </xsl:if>
++
++	<xsl:variable name="BILDER">
++	    <xsl:for-each select="Bilddateiname">
++		<xsl:value-of select="substring-before(.,'.jpg')" />
++	    <xsl:text> </xsl:text>
++	    </xsl:for-each>
++	</xsl:variable>
++
++	<xsl:if test="string-length(normalize-space($BILDER))">
++	    <images><xsl:value-of select="translate(normalize-space($BILDER),' ',',')"/></images>
++	    <imagetype>jpg</imagetype>
++	</xsl:if>
++
++	</event>
++      </xsl:if>
++
++    </xsl:for-each>
++
++</events>
++
++</xsl:template>
++
++
++<xsl:template name="Bewertungen">
++    <xsl:param name="str" select="."/>
++    <xsl:variable name="part" select="substring-before($str, ';')" />
++    <xsl:variable name="value" select="substring('**********', 1, number(substring-after($part, '=')))" />
++    <xsl:if test="string-length($value)">
++        <xsl:value-of select="concat(' / ', substring-before($part, '='), ' ', $value)"/>
++    </xsl:if>
++    <xsl:variable name="rest" select="substring-after($str, ';')"/>
++    <xsl:if test="string-length($rest)">
++	<xsl:call-template name="Bewertungen">
++        <xsl:with-param name="str" select="$rest"/>
++	</xsl:call-template>
++    </xsl:if>
++</xsl:template>
++
++<xsl:template name="mapping">
++    <xsl:param name="str" select="." />
++    <xsl:param name="default" select="." />
++   <xsl:variable name="value" select="translate($str,'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖU', 'abcdefghijklmnopqrstuvwxyzäöü')" />
++   <xsl:variable name="map" select="$categorieMapping[contains($value, .)]/../@name" />    
++    <xsl:choose>
++        <xsl:when test="string-length($map)">
++          <category><xsl:value-of select="$map" /></category>
++       </xsl:when>
++        <xsl:when test="string-length($default)">
++          <category><xsl:value-of select="$default" /></category>
++       </xsl:when>
++    </xsl:choose>
++</xsl:template>
++
++
++<!-- grouping gruppiert einen string, indem die Eintrage mit ', ' hinter dem jeweiligen key, bzw. vor dem folgenden ; geschrieben werden
++     str: ein ; separierter String mit einem keywort in Klammern (Am Ende muss auch jeweils ein ; stehen), zb: Moderator1 (Moderation);Moderator2 (Moderator);Schauspieler1 (Hauptdarsteller);Schauspieler2 (Nebendarsteller);Schauspieler3 (Name der Filmfigur);Kamerakind (Kamera);Der Produzent (Produzent);Assistent 1 (Regie);Musiker1 (Musik);Autor1 (Drehbuch);Autor2 (Drehbuch);Musiker2 (Musik)
++     values: ein ; separierter string mit folgendem Syntax: [key][key])[key n]optionaler text;
++     eine ) hinter dem key bedeutet, dass der ursprüngliche key wieder in Klammern dahinter geschrieben wird
++     Alle nicht zuordenbare keys werden ans Ende gehängt
++     Beispiel: [Moderator][Moderation];[Regie];[Kamera])[Schnitt])[Produzent]); -> [Moderator][Moderation], Moderator1, Moderator2;[Regie], Assistent 1;[Kamera])[Schnitt])[Produzent]), Kamerakind (Kamera), Der Produzent (Produzent);, Schauspieler1 (Hauptdarsteller), Schauspieler2 (Nebendarsteller), Schauspieler3 (Name der Filmfigur), Musiker1 (Musik), Autor1 (Drehbuch), Autor2 (Drehbuch), Musiker2 (Musik)
++-->
++<xsl:template name="grouping">
++    <xsl:param name="str" />
++    <xsl:param name="values" />
++
++    <xsl:variable name="term" select="substring-before($str, ';')" />
++    <xsl:variable name="rest" select="substring-after($str, ';')"/>
++    <xsl:variable name="newValues">
++        <xsl:choose>
++            <xsl:when test="string-length($term)">
++                <xsl:variable name="part" select="substring-before($term, ')')" />
++                <xsl:variable name="key" select="concat('[', substring-after($part, '('), ']')" />
++                <xsl:variable name="valPart" select="substring-after($values, $key)" />
++                <xsl:choose>
++                    <xsl:when test="string-length($valPart)">
++                        <xsl:variable name="insPos" select="string-length($values) - string-length($valPart) + string-length(substring-before($valPart, ';') )"/>
++                        <xsl:choose>
++                            <xsl:when test="substring($valPart, 1 ,1) = ')'">
++                                <xsl:value-of select="concat(substring($values, 1, $insPos), ', ', $part, ')',  substring($values, $insPos + 1))" />
++                            </xsl:when>
++                            <xsl:otherwise>
++                                <xsl:value-of select="concat(substring($values, 1, $insPos), ', ', substring-before($part, ' ('),  substring($values, $insPos + 1))" />
++                            </xsl:otherwise>
++                        </xsl:choose>
++                    </xsl:when>
++                    <xsl:otherwise>
++                        <xsl:value-of select="concat($values, ', ', $term)" />
++                    </xsl:otherwise>
++                </xsl:choose>
++            </xsl:when>
++            <xsl:otherwise>
++                <xsl:value-of select="$values" />
++            </xsl:otherwise>
++        </xsl:choose>
++    </xsl:variable>
++    <xsl:choose>
++        <xsl:when test="string-length($rest)">
++            <xsl:call-template name="grouping">
++                <xsl:with-param name="str" select="$rest"/>
++                <xsl:with-param name="values" select="$newValues"/>
++            </xsl:call-template>
++        </xsl:when>
++        <xsl:otherwise>
++            <xsl:value-of select="$newValues"/>
++        </xsl:otherwise>
++    </xsl:choose>
++</xsl:template>
++
++
++<!-- group2tag erzeugt aus einen key-value string xml-tags
++     str: ein ; separierter String mit :key, value Werten (Am Ende muss auch jeweils ein ; stehen)
++
++     str: ein ; separierter string mit folgendem Syntax: optionaler text:tagname, value;
++        der ':' ist erforderlich und bezeichnet den Begin des tagnamens
++        Wenn der Wert leer ist, wird der tag NICHT geschrieben
++        Beispiel: text:moderator, Moderator1, Moderator2;ignorierter tag:screenplay;:director, Assistent 1; -> <moderator>Moderator1, Moderator2</moderator><director>Assistent 1</director>
++-->
++<xsl:template name="group2tag">
++    <xsl:param name="str" select="."/>
++    <xsl:variable name="part" select="substring-after(substring-before($str, ';'), ':')" />
++    <xsl:variable name="rest" select="substring-after($str, ';')"/>
++    <xsl:variable name="val" select="substring-after($part, ', ')" />
++    <xsl:if test="string-length($val)">
++        <xsl:element name="{substring-before($part, ',')}">
++            <xsl:value-of select="$val"/>
++        </xsl:element>
++    </xsl:if>
++    <xsl:if test="string-length($rest)">
++        <xsl:call-template name="group2tag">
++            <xsl:with-param name="str" select="$rest"/>
++        </xsl:call-template>
++    </xsl:if>
++</xsl:template>
++
++<xsl:template name="date2UTC">
++    <xsl:param name="date"/>
++    <xsl:variable name="tz">
++        <xsl:choose>
++            <xsl:when test="date:seconds(date:difference($dststart,$date)) &gt;= 0 and date:seconds(date:difference($date,$dstend)) &gt;= 0">+01:00</xsl:when>
++            <xsl:otherwise>+00:00</xsl:otherwise>
++        </xsl:choose>
++    </xsl:variable>
++    <xsl:value-of select="date:seconds(concat($date,$tz))"/>
++</xsl:template>
++
++</xsl:stylesheet>
+diff -Naur -x .git vdr-epg-daemon.orig/PLUGINS/tvm/tvm.c vdr-epg-daemon/PLUGINS/tvm/tvm.c
+--- vdr-epg-daemon.orig/PLUGINS/tvm/tvm.c	1970-01-01 01:00:00.000000000 +0100
++++ vdr-epg-daemon/PLUGINS/tvm/tvm.c	2015-09-23 15:23:20.000000000 +0200
+@@ -0,0 +1,757 @@
++/*
++ * tvm.c
++ *
++ * See the README file for copyright information
++ *
++ */
++
++#include <stdint.h>
++#include <map>
++
++#include "tvm.h"
++
++//***************************************************************************
++// Tvm
++//***************************************************************************
++
++Tvm2::Tvm2()
++   : Plugin()
++{
++   pxsltStylesheet = 0;
++   stmtMarkOldEvents = 0;
++   stmtSetUpdFlgByFileref = 0;
++   selectDistBySource = 0;
++   selectId = 0;
++   valueFileRef = 0;
++
++   // config
++
++   timeout = 30;
++}
++
++Tvm2::~Tvm2()
++{
++   delete stmtMarkOldEvents;
++   delete stmtSetUpdFlgByFileref;
++   delete selectDistBySource;
++   delete valueFileRef;
++
++   if (pxsltStylesheet)
++      xsltFreeStylesheet(pxsltStylesheet);
++}
++
++int Tvm2::init(cEpgd* aObject, int aUtf8)
++{
++   Plugin::init(aObject, aUtf8);
++
++   pxsltStylesheet = loadXSLT("tvmovie", confDir, utf8);
++
++   return done;
++}
++
++int Tvm2::initDb()
++{
++   int status = success;
++
++//    // --------
++//    // update events set updflg = ?
++//    //    where fileref = ? 
++//    //      and source = ?
++//    //      and updflg in (....)
++
++//    stmtSetUpdFlgByFileref = new cDbStatement(obj->eventsDb);
++   
++//    stmtSetUpdFlgByFileref->build("update %s set ", obj->eventsDb->TableName());
++//    stmtSetUpdFlgByFileref->bind("UpdFlg", cDbService::bndIn |cDbService:: bndSet);
++//    stmtSetUpdFlgByFileref->build( " where ");
++//    stmtSetUpdFlgByFileref->bind(valueFileRef, cDbService::bndIn |cDbService:: bndSet);
++//    stmtSetUpdFlgByFileref->bind("Source", cDbService::bndIn | cDbService::bndSet, " and ");
++//    stmtSetUpdFlgByFileref->build(" and updflg in (%s)", Us::getDeletable());
++
++//    status += stmtSetUpdFlgByFileref->prepare();
++
++//    // --------
++//    // update events set delflg = ?, fileref = ?, updsp = ?
++//    //    where fileref = ? 
++//    //      and source = ?
++
++//    valueFileRef = new cDbValue(obj->eventsDb->getField("FileRef"));
++//    stmtSetDelByFileref = new cDbStatement(obj->eventsDb);
++   
++//    stmtSetDelByFileref->build("update %s set ", obj->eventsDb->TableName());
++//    stmtSetDelByFileref->bind("DelFlg", cDbService::bndIn |cDbService:: bndSet);
++//    stmtSetDelByFileref->bind("UpdFlg", cDbService::bndIn |cDbService:: bndSet, ", ");
++//    stmtSetDelByFileref->bind("FileRef", cDbService::bndIn | cDbService::bndSet, ", ");
++//    stmtSetDelByFileref->bind("UpdSp", cDbService::bndIn | cDbService::bndSet, ", ");
++//    stmtSetDelByFileref->build( " where ");
++//    stmtSetDelByFileref->bind(valueFileRef, cDbService::bndIn |cDbService:: bndSet);
++//    stmtSetDelByFileref->bind("Source", cDbService::bndIn | cDbService::bndSet, " and ");
++
++//    status += stmtSetDelByFileref->prepare();
++  
++   // ----------
++   // update events 
++   //   set updflg = case when updflg in (...) then 'D' else updflg end, 
++   //       delflg = 'Y',
++   //       updsp = unix_timestamp()
++   //   where source = '...'
++   //     and (source, fileref) not in (select source,fileref from fileref)
++
++   stmtMarkOldEvents = new cDbStatement(obj->eventsDb);
++
++   stmtMarkOldEvents->build("update %s set ", obj->eventsDb->TableName());
++   stmtMarkOldEvents->build("updflg = case when updflg in (%s) then 'D' else updflg end, ", Us::getDeletable());
++   stmtMarkOldEvents->build("delflg = 'Y', updsp = unix_timestamp()");
++   stmtMarkOldEvents->build(" where source = '%s'", getSource());
++   stmtMarkOldEvents->build(" and  (source, fileref) not in (select source,fileref from fileref)");
++
++   status += stmtMarkOldEvents->prepare();  
++
++   // ---------
++   // select channelid, mergesp from channelmap 
++   //     where source = ? and extid = ?
++
++   selectId = new cDbStatement(obj->mapDb);
++
++   selectId->build("select ");
++   selectId->bind("ChannelId", cDBS::bndOut);
++   selectId->bind("MergeSp", cDBS::bndOut, ", ");
++   selectId->bind("Merge", cDBS::bndOut, ", ");
++   selectId->build(" from %s where ", obj->mapDb->TableName());
++   selectId->bind("Source", cDBS::bndIn | cDBS::bndSet);
++   selectId->bind("ExternalId", cDBS::bndIn | cDBS::bndSet, " and ");
++   
++   status += selectId->prepare();
++
++   // --------
++   // select distinct extid from channelmap
++   //   where source = ?
++   
++   selectDistBySource = new cDbStatement(obj->mapDb);
++   selectDistBySource->build("select ");
++   selectDistBySource->bind("ExternalId", cDBS::bndOut, "distinct ");
++   selectDistBySource->build(" from %s where ", obj->mapDb->TableName());
++   selectDistBySource->bind("Source", cDBS::bndIn | cDBS::bndSet);
++
++   status += selectDistBySource->prepare();
++
++   return status;
++}
++
++int Tvm2::exitDb()
++{
++   delete valueFileRef;           valueFileRef = 0;
++   delete stmtMarkOldEvents;      stmtMarkOldEvents = 0;
++   delete stmtSetUpdFlgByFileref; stmtSetUpdFlgByFileref = 0;
++   delete selectDistBySource;     selectDistBySource = 0;
++   delete selectId;               selectId = 0;
++
++   return success;
++}
++
++//***************************************************************************
++// At Config Item
++//***************************************************************************
++
++int Tvm2::atConfigItem(const char* Name, const char* Value)
++{
++   if (!strcasecmp(Name, "Timeout"))  
++      timeout = atoi(Value);
++   else 
++      return fail;
++
++   return success;
++}
++
++//***************************************************************************
++// Ready
++//***************************************************************************
++
++int Tvm2::ready() 
++{ 
++   static int count = na;
++
++   if (count == na)
++   {
++      char* where;
++
++      asprintf(&where, "source = '%s'", getSource());
++
++      if (obj->mapDb->countWhere(where, count) != success)
++         count = na;
++
++      free(where);
++   }
++
++   return count > 0;
++}
++
++//***************************************************************************
++// Process 
++// - Datei von TVM holen (sofern aktualisiert, noch nicht geholt oder fullupdate)
++//    Erkennung der Aktualisierung erfolgt �ber die 'fileref' Tabelle
++// - XSLT Konvertierung durchf�hren
++// - Resultat je zugeordnetem Kanal in der 'events' 
++//    Tabelle speichern/ aktualisieren incl. der 'fileref'
++// - Neue 'fileref' in die 'fileref' Tabelle �bernehmen 
++//    -> damit ist die Verarbeitung quittiert
++//***************************************************************************
++
++int Tvm2::processDay(int day, int fullupdate, Statistic* stat)
++{
++   int status;
++   MemoryStruct data;
++
++   if (day != 0)
++   {
++      tell(1, "Skipping day %d for TVM plugin, since all days ar performed on day 0", day);
++      return success;
++   }
++      
++   obj->connection->startTransaction();
++
++   // loop over all extid's of channelmap
++   
++   obj->mapDb->clear();
++   obj->mapDb->setValue("Source", getSource());
++   
++   for (int res = selectDistBySource->find(); res && !obj->doShutDown(); 
++        res = selectDistBySource->fetch())
++   {
++      char* extid = strdup(obj->mapDb->getStrValue("ExternalId"));
++      int found;
++      char* url;
++      char* filename;      // the file to be downloaded
++      int fileSize = 0;
++
++      tell(0, "Checking tvm id %s", extid);
++
++      // URL - Aufbau
++      //    http://wwwa.tvmovie.de/static/tvghost/html/onlinedata/cftv520/tvdaten-premium-EXTID.cftv
++
++      asprintf(&filename, "tvdaten-premium-%s.cftv", extid);    
++      asprintf(&url, "http://wwwa.tvmovie.de/static/tvghost/html/onlinedata/cftv520/%s", filename);
++
++      // lookup file information
++         
++      obj->fileDb->setValue("Name", filename);
++      obj->fileDb->setValue("Source", getSource());
++      found = obj->fileDb->find();
++
++      // Don't check the day or the EPG2VDRConfig.upddays
++      //   since TVM deliver all days in one file ...
++
++      char* fileRef = 0;
++
++      // first get the http header
++         
++      data.clear();
++      data.headerOnly = yes;
++         
++      status = obj->downloadFile(url, fileSize, &data, 30, userAgent());
++         
++      if (status != success)
++      {
++         tell(0, "Download header of '%s' failed", url);
++         free(filename);
++         free(url);
++         obj->fileDb->reset();
++         free(extid);
++         continue;
++      }
++
++      asprintf(&fileRef, "%s-%s", filename, data.tag);
++
++      if (found && obj->fileDb->hasValue("FileRef", fileRef))
++      {
++         tell(2, "Skipping download of id %s due to non-update", extid);
++
++         stat->nonUpdates++;
++            
++         free(filename);
++         free(url);
++         free(fileRef);
++         obj->fileDb->reset();
++         free(extid);
++         continue;
++      }
++
++      data.clear();
++
++      if (obj->downloadFile(url, fileSize, &data, timeout, userAgent()) != success || !zipValid(&data))
++      {
++         if (!zipValid(&data))
++            tell(1, "Error, zip file '%s' not valid, check the coresponding tvm id in youre configuration", url);
++         else
++            tell(1, "Error, download of '%s' failed", url);
++
++         free(filename);
++         free(url);
++         free(fileRef);
++         obj->fileDb->reset();
++         free(extid);
++         continue;
++      }
++
++      free(fileRef);
++
++      downloadImageFile(extid);
++
++      if (fileSize > 0)
++      {
++         char* fileRef = 0;
++
++         stat->bytes += fileSize;
++         stat->files++;
++            
++         tell(0, "Downloaded file '%s' with (%d) Bytes", url, fileSize);
++
++         // store to FS
++         {            
++            char* tmp = 0;
++            asprintf(&tmp, "%s.zip", filename);
++            obj->storeToFs(&data, tmp, getSource());
++            free(tmp);
++         }
++
++         asprintf(&fileRef, "%s-%s", obj->fileDb->getStrValue("Name"), data.tag);
++            
++         if ((status = processFile(extid, &data, filename, fileRef)) != success)
++         {
++            tell(0, "Processing of '%s' failed", filename);
++            status = fail;
++            stat->rejected++;
++         }
++
++         if (status == success)
++         {
++// we can use this code instead of "stmtMarkOldEvents" !!
++            
++//             if (found)
++//             {
++//                // mark 'old' entrys in events table as deleted
++//                // and 'fake' fileref to new to avoid deletion at cleanup
++
++//                // first - set updflg to 'D' (only ift updflg in Us::getDeletable())
++
++//                obj->eventsDb->clear();
++//                obj->eventsDb->setValue("UpdFlg", "D");
++
++//                // where ..
++
++//                obj->eventsDb->setValue("Source", getSource());
++//                valueFileRef->setValue(obj->fileDb->getStrValue("FileRef"));  // old fileref
++
++//                stmtSetUpdFlgByFileref->execute();
++
++//                // second - set delflg and fileref ..
++
++//                obj->eventsDb->clear();
++//                obj->eventsDb->setValue("DelFlg", "Y");
++//                obj->eventsDb->setValue("FileRef", fileRef);                    // new fileref
++//                obj->eventsDb->setValue("UpdSp", time(0));
++
++//                // where ..
++
++//                obj->eventsDb->setValue("Source", getSource());
++//                valueFileRef->setValue(obj->fileDb->getStrValue("FileRef"));  // old fileref
++
++//                stmtSetDelByFileref->execute();
++//             }
++               
++            // Confirm processing of file
++               
++            obj->fileDb->setValue("ExternalId", extid);
++            obj->fileDb->setValue("Tag", data.tag);
++            obj->fileDb->setValue("FileRef", fileRef);
++            obj->fileDb->store();
++
++            obj->connection->commit();
++            usleep(100000);
++            obj->connection->startTransaction();
++         }
++            
++         free(fileRef);
++      }
++
++      obj->fileDb->reset();
++      free(url);
++      free(filename);
++      free(extid);
++      data.clear();
++
++      if (!obj->dbConnected())
++         return fail;
++   }
++
++   selectDistBySource->freeResult();
++   obj->connection->commit();
++
++   return success;
++}
++
++//***************************************************************************
++// Zip Valid
++//***************************************************************************
++
++int Tvm2::zipValid(MemoryStruct* data)
++{
++   char head[100+TB];
++
++   // check content
++
++   if (!data || !data->memory)
++      return no;
++
++   strncpy(head, data->memory, 100);
++   head[100] = 0;   
++
++   if (strcasestr(head, "DOCTYPE HTML"))
++      return no;
++
++   return yes;
++}
++
++//***************************************************************************
++// Process Tvm File
++//***************************************************************************
++
++int Tvm2::processFile(const char* extid, MemoryStruct* data, 
++                      const char* fileName, const char* fileRef)
++{
++   xmlDocPtr transformedDoc;
++   xmlNodePtr xmlRoot;
++   MemoryStruct xmlData;
++   int count = 0;
++   char* command;
++   char password[7+TB];
++   char* tmp = 0;
++
++   memset(password, 0xb7, 7);
++   password[7] = 0;
++
++   tell(0, "Extracting '%s'", fileName);
++
++   asprintf(&command, "unzip -o -qq -P %s -d %s/%s %s/%s/%s",
++            password, EpgdConfig.cachePath, getSource(), 
++            EpgdConfig.cachePath, getSource(), fileName);
++
++   asprintf(&tmp, "%s/%s/%s.tv1", EpgdConfig.cachePath, getSource(), extid);
++
++   if (system(command) < 0 || !fileExists(tmp))
++   {
++      tell(0, "Extracting of '%s' failed, missing at least '%s'", fileName, tmp);
++      free(tmp);
++      free(command);
++      return fail;
++   }
++
++   free(tmp);
++   free(command);
++
++   if (createXml(extid, &xmlData) != success)
++      return fail;
++
++   if ((transformedDoc = obj->transformXml(xmlData.memory, xmlData.size, pxsltStylesheet, fileName)) == 0)
++   {
++      xmlData.clear();
++      tell(0, "XSLT transformation for '%s' failed, ignoring", fileName);
++      return fail;
++   }
++
++   xmlData.clear();
++
++   if (!(xmlRoot = xmlDocGetRootElement(transformedDoc)))
++   {
++      tell(0, "Invalid xml document returned from xslt for '%s', ignoring", fileName);
++      return fail;
++   }
++
++   // process 'all' events for 'all' configured channles of this extid
++
++   obj->mapDb->clear();
++   obj->mapDb->setValue("ExternalId", extid);
++   obj->mapDb->setValue("Source", getSource());
++
++   for (int f = selectId->find(); f && obj->dbConnected(); f = selectId->fetch())
++   {
++      const char* channelId = obj->mapDb->getStrValue("ChannelId");
++
++      for (xmlNodePtr node = xmlRoot->xmlChildrenNode; node && obj->dbConnected(); node = node->next)
++      {
++         int insert;
++         char* prop = 0;
++         int id;
++
++         // skip all unexpected elements
++         
++         if (node->type != XML_ELEMENT_NODE || strcmp((char*)node->name, "event") != 0)
++            continue;
++         
++         // get/check id
++         
++         if (!(prop = (char*)xmlGetProp(node, (xmlChar*)"id")) || !*prop || !(id = atoi(prop)))
++         {
++            xmlFree(prop);
++            tell(0, "Missing event id, ignoring!");
++            continue;
++         }
++         
++         xmlFree(prop);
++         
++         // create event ..
++         
++         obj->eventsDb->clear();
++         obj->eventsDb->setValue("EventId", id);
++         obj->eventsDb->setValue("ChannelId", channelId);
++         
++         insert = !obj->eventsDb->find();
++
++         obj->eventsDb->setValue("Source", getSource());
++         obj->eventsDb->setValue("FileRef", fileRef);
++
++         // auto parse and set other fields
++
++         obj->parseEvent(obj->eventsDb->getRow(), node);
++
++         // ...
++
++         time_t mergesp = obj->mapDb->getIntValue("MergeSp");
++         long starttime = obj->eventsDb->getIntValue("StartTime");
++         int merge = obj->mapDb->getIntValue("Merge");
++         
++         // store ..
++
++         if (insert)
++         {
++            // handle insert
++
++            obj->eventsDb->setValue("Version", 0xFF);
++            obj->eventsDb->setValue("TableId", 0L);
++            obj->eventsDb->setValue("UseId", 0L);
++
++            if (starttime <= mergesp)
++               obj->eventsDb->setValue("UpdFlg", "I");
++            else
++               obj->eventsDb->setValue("UpdFlg", merge > 1 ? "S" : "A");
++
++            obj->eventsDb->insert();
++         }
++         else
++         {
++            if (obj->eventsDb->hasValue("DelFlg", "Y"))
++               obj->eventsDb->setValue("DelFlg", "N");
++
++            if (obj->eventsDb->hasValue("UpdFlg", "D"))
++            {
++               if (starttime <= mergesp)
++                  obj->eventsDb->setValue("UpdFlg", "I");
++               else
++                  obj->eventsDb->setValue("UpdFlg", merge > 1 ? "S" : "A");
++            }
++
++            obj->eventsDb->update();
++         }
++
++         obj->eventsDb->reset();
++         count++;
++      }
++   }
++
++   selectId->freeResult();
++
++   xmlFreeDoc(transformedDoc);
++
++   tell(2, "XML File '%s' processed, updated %d events", fileName, count);
++
++   return success;
++}
++
++//***************************************************************************
++// Cleanup After
++//***************************************************************************
++
++int Tvm2::cleanupAfter()
++{
++   // mark wasted events (delflg, ...)
++
++   stmtMarkOldEvents->execute();   
++
++   return success;
++}
++
++//***************************************************************************
++// Download Image File
++//***************************************************************************
++
++int Tvm2::downloadImageFile(const char* extid)
++{
++   char* filename;
++   int fileSize = 0;
++   char* url;
++   MemoryStruct data;
++   char* command;
++   char password[7+TB];
++   int status;
++
++   asprintf(&filename, "tvbilder-premium-%s.cftv", extid);
++   asprintf(&url, "http://wwwa.tvmovie.de/static/tvghost/html/onlinedata/cftv520/%s", filename);
++
++   if (obj->downloadFile(url, fileSize, &data, 30, userAgent()) != success)
++   {
++      tell(0, "Download at '%s' failed", url);
++      free(url);
++      free(filename);
++      return fail;
++   }
++
++   free(url);
++   status = obj->storeToFs(&data, filename, getSource());
++ 
++   memset(password, 0xb7, 7);
++   password[7] = 0;
++
++   asprintf(&command, "unzip -o -qq -P %s -d %s/%s %s/%s/%s",
++            password, EpgdConfig.cachePath, getSource(), 
++            EpgdConfig.cachePath, getSource(), filename);
++
++   if (system(command) < 0)
++   {
++      tell(0, "Extracting of '%s' failed", filename);
++      free(command);
++      return fail;
++   }
++
++   char* tmp = 0;
++   asprintf(&tmp, "%s/%s/%s", EpgdConfig.cachePath, getSource(), filename);
++   removeFile(tmp);
++   free(tmp);
++   
++   free(command);
++   free(filename);
++
++   return status;
++}
++
++//***************************************************************************
++// Get Picture
++//***************************************************************************
++
++int Tvm2::getPicture(const char* imagename, const char* fileRef, MemoryStruct* data)
++{
++   data->clear();
++   obj->loadFromFs(data, imagename, getSource());
++
++   char* tmp = 0;
++   asprintf(&tmp, "%s/%s/%s", EpgdConfig.cachePath, getSource(), imagename);
++   removeFile(tmp);
++   free(tmp);
++
++   return data->size;
++}
++
++//***************************************************************************
++// Create Xml
++//***************************************************************************
++
++int Tvm2::createXml(const char* extid, MemoryStruct* xmlData)
++{
++   char* filename;
++   map<int, map<string, string> > table;
++   map<int, map<string, string> >::iterator iter;
++   
++   tell(0, "Creating xml of %s", extid);  
++
++   // -----------------------------------------------
++   // read data into memory table
++   
++   for (int num = 0; num < 2; num++)
++   {
++      FILE* file;
++      int ch;
++      int row = 0, col = 0;
++      
++      asprintf(&filename, "/%s/%s/%s.tv%d", EpgdConfig.cachePath, getSource(), extid, num+1);
++      
++      if (!(file = fopen(filename, "r")))
++      {
++         tell(0, "Error: Opening '%s' failed, status was '%s'", filename, strerror(errno));
++         free(filename);
++         return fail;
++      }
++      
++      fseek(file, 0, SEEK_SET);
++      
++      for (int i = 0; i < 10; i++) 
++      {
++         row *= 10;
++         row += fgetc(file) - '0';
++      }
++      
++      while ((ch = fgetc(file)) != '\f')
++      {
++         col *= 10;
++         col += ch - '0';
++      }
++      
++      fseek(file, 40, SEEK_SET);                    // seek to data section
++      
++      for (int c = 0; c < col; c++)
++      {
++         Field header(file);
++         const char* name = header.getString().c_str();
++         
++         for (int r = 0; r < row; r++)
++         {
++            Field field(file);
++            
++            if (field.isNumeric())
++               table[r][name] = num2Str(field.getNumeric());
++            else if (field.isString())
++               table[r][name] = field.getXmlString();
++         }
++      }
++      
++      fclose(file);
++      removeFile(filename);
++      free(filename);
++   }
++
++   // -----------------------------------------------   
++   // flush data to xml file
++
++   string xmlBuf;
++   
++   xmlBuf += "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" ?>\n";
++   xmlBuf += "<!DOCTYPE Export>\n";
++   xmlBuf += "<Export>\n";
++
++   for (iter = table.begin(); iter != table.end(); iter++) 
++   {
++      xmlBuf += "  <Sendung>\n";
++
++      for (map<string, string>::iterator i = iter->second.begin(); i != iter->second.end(); i++)
++         xmlBuf += "    <" + i->first + ">" + i->second + "</" + i->first + ">\n";
++
++      xmlBuf += "  </Sendung>\n";
++   }
++   
++   xmlBuf += "</Export>\n";
++
++   xmlData->size = xmlBuf.length()+TB;
++   xmlData->memory = (char*)malloc(xmlData->size);
++   strcpy(xmlData->memory, xmlBuf.c_str());
++
++   if (EpgdConfig.storeXmlToFs)
++   {
++      asprintf(&filename, "%s.xml", extid);
++      obj->storeToFs(xmlData, filename, getSource());
++      free(filename);
++   }
++
++   return success;
++}
++
++//***************************************************************************
++
++extern "C" void* EPGPluginCreator () { return new Tvm2(); }
+diff -Naur -x .git vdr-epg-daemon.orig/PLUGINS/tvm/tvm.h vdr-epg-daemon/PLUGINS/tvm/tvm.h
+--- vdr-epg-daemon.orig/PLUGINS/tvm/tvm.h	1970-01-01 01:00:00.000000000 +0100
++++ vdr-epg-daemon/PLUGINS/tvm/tvm.h	2014-07-09 14:13:19.000000000 +0200
+@@ -0,0 +1,188 @@
++/*
++ * tvm.h
++ *
++ * See the README file for copyright information
++ *
++ */
++
++#include "epgd.h"
++#include <math.h>
++
++#define TVM_VERSION  "0.1.4"
++
++//***************************************************************************
++// Tvm2
++//***************************************************************************
++
++class Tvm2 : public Plugin
++{
++   public:
++
++      Tvm2();
++      virtual ~Tvm2();
++
++      int init(cEpgd* aObject, int aUtf8);
++      int initDb();
++      int exitDb();
++      int atConfigItem(const char* Name, const char* Value);
++
++      const char* getSource()   { return "tvm"; }
++
++      int getPicture(const char* imagename, const char* fileRef, MemoryStruct* data);
++      int processDay(int day, int fullupdate, Statistic* stat);
++      int cleanupAfter();
++      const char* userAgent()   { return "Mozilla/4.0 (compatible; Clickfinder 5.3; Windows NT 5.2)"; }
++
++      int ready();
++
++   protected:
++
++      int processFile(const char* extid, MemoryStruct* data, const char* fileName, const char* fileRef);
++      int downloadImageFile(const char* extid);
++      int createXml(const char* extid, MemoryStruct* xmlData);
++      int zipValid(MemoryStruct* data);
++
++      xsltStylesheetPtr pxsltStylesheet;
++      cDbStatement* stmtMarkOldEvents;
++      cDbStatement* stmtSetUpdFlgByFileref;
++      cDbStatement* selectDistBySource;
++      cDbStatement* selectId;
++      cDbValue* valueFileRef;
++      
++      // config
++
++      int timeout;
++};
++
++// TVM specific stuff
++/*
++    Time is measured by TV Movie in TVM-ticks, which are linear with some unknown time being zero. I have
++    aligned manually two points on this time axis, which are epoch (in TVM-ticks) and unixTimeEpoch (in
++    UNIX time, seconds since 1970). The conversion factor is given by factor.
++    Gives the TV-Movie-ticks equivalent to the UNIX time ggiven in unixTimeEpoch. 
++*/
++
++const uint64_t epoch = 4675708794760826425LL;
++const double factor = 95443717 / 60.0;            // Number of TVM-ticks in per second. 
++const unsigned int unixTimeEpoch = 1233270600;
++
++//***************************************************************************
++// Field
++//***************************************************************************
++
++class Field 
++{
++   public:
++
++      enum ContentType 
++      { 
++         ctInt      = 3, 
++         ctDateTime = 7, 
++         ctString   = 8,
++         ctTwoByte  = 11 
++      };
++
++      Field(FILE* file)        { read(file); }
++
++      const string& getString() const  { return stringContent; }
++      uint64_t getNumeric()     const  { return numeric; }
++      bool isNumeric()          const  { return type == ctInt || type == ctTwoByte; }
++      bool isString()           const  { return type == ctString || type == ctDateTime; }
++
++      string getXmlString()
++      {
++         string xml = "";
++         
++         for (unsigned int i = 0; i < stringContent.size(); i++) 
++         {
++            char c = stringContent[i];
++
++            if (c == '<') 
++            {
++               if (stringContent.substr(i, 4) == "<br>") 
++               {
++                  xml += "\n\n";
++                  i += 3;
++               } 
++               else 
++                  xml += "&lt;";
++            } 
++
++            else if (c == '>')
++               xml += "&gt;";
++            else if (c == '&')
++               xml += "&amp;";
++            else if (c == '"')
++               xml += "&quot;";
++            else
++               xml += c;
++         }
++
++         return xml;
++      }
++
++   private:
++
++      void read(FILE* file) 
++      {
++         type = (ContentType)readInt(file, 2);
++
++         switch (type) 
++         {
++            case ctString:  readString(file);            break;
++            case ctInt:     numeric = readInt(file, 4);  break;
++
++            case ctDateTime: 
++            {
++               char buffer[30];
++
++               numeric = readInt(file, 8);
++               unixTime = unixTimeEpoch + (int)round((numeric-epoch)/factor) - 1;
++               
++               strftime(buffer, 30, "%Y-%m-%d %H:%M:%S", gmtime(&unixTime));
++               stringContent = buffer;
++
++               break;
++            }
++
++            case ctTwoByte:
++            {
++               numeric = readInt(file, 2);
++
++               if (numeric == 0xFFFF)
++                  numeric = 1;
++
++               break;
++            }
++         }
++      }
++
++      void readString(FILE* file)
++      {
++         int length = readInt(file, 2);
++         
++         for (int i = 0; i < length; i++) 
++         {
++            int ch = fgetc(file);
++            stringContent.push_back(ch);
++         }
++      }
++      
++      static uint64_t readInt(FILE* file, int bytes) 
++      {
++         uint64_t numeric = 0;
++
++         for (int i = 0; i < bytes; i++) 
++         {
++            int byte = fgetc(file);
++            numeric += (uint64_t)byte << (8*i);
++         }
++
++         return numeric;
++      }
++      
++      ContentType type;
++      string stringContent;
++      uint64_t numeric;
++      time_t unixTime;
++};
