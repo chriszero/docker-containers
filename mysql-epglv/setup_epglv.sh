@@ -2,7 +2,7 @@
 
 apt-get update -qq
 apt-get install -qy build-essential locales \
-	libmysqlclient-dev libmysqlclient20 zlib1g zlib1g-dev
+	mysql-common libmysqlclient-dev libmysqlclient18 zlib1g zlib1g-dev
 
 echo "de_DE.UTF-8 UTF-8" >> /etc/locale.gen; locale-gen
 export LANG="de_DE.UTF-8"  
