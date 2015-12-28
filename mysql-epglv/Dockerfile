@@ -1,5 +1,9 @@
 FROM mysql:5.7
 
+ENV LANG de_DE.UTF-8  
+ENV LANGUAGE de_DE:de  
+ENV LC_ALL de_DE.UTF-8
+
 RUN mkdir -p /tmp/epglv/src
 ADD epglv/* /tmp/epglv/
 ADD epglv/src/* /tmp/epglv/src/
