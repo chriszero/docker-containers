@@ -15,7 +15,7 @@ apt-get install -qy build-essential \
 	libcurl3-nss libcurl4-nss-dev \
 	libxslt1.1 libxslt1-dev \
 	libxml2 libxml2-dev \
-	libmysqlclient-dev libmysqlclient18 \
+	libmariadbclient-dev libmariadbclient18 \
 	libjpeg8 libjpeg-dev libtiff-dev \
 	libimlib2 libimlib2-dev \
 	libjansson4 libjansson-dev \
@@ -48,7 +48,7 @@ apt-get remove -qy \
 	libcurl4-nss-dev \
 	libxslt1-dev \
 	libxml2-dev \
-	libmysqlclient-dev \
+	libmariadbclient-dev \
 	libjpeg-dev libtiff-dev \
 	libimlib2-dev \
 	libjansson-dev \

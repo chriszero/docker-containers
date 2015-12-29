@@ -1,18 +1,18 @@
 epgd:
-  build: .
+  build: chriszero/vdr-epgd
   ports:
     - 9999:9999
   links:
-    - mysqldb
+    - database
+  restart: always
   volumes:
     - /config
     - /var/epgd
 
-mysqldb:
-  image: chriszero/mysql-epglv
+database:
+  image: chriszero/mariadb-epglv
+  ports:
+    - 3306:3306
+  restart: always
   environment:
     - MYSQL_ROOT_PASSWORD=my-secret-pw
-    - MYSQL_DATABASE=epg2vdr
-    - MYSQL_USER=epg2vdr
-    - MYSQL_PASSWORD=epg
-    - LANG=en_US.UTF-8
