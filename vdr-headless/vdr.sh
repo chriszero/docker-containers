@@ -20,8 +20,6 @@ export LANG="de_DE.UTF-8"
 #	sleep 1
 #fi
 
-# Restrict the ipv4 Portrange
-echo "40000 40100" >/proc/sys/net/ipv4/ip_local_port_range
 
 # Run vdr
 exec s6-setuidgid vdr vdr
