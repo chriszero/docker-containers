@@ -1,0 +1,14 @@
+vdr:
+  build: .
+# net: host
+# privileged: true
+  ports:
+    - "8008:8008"
+    - "3000-3100/udp:3000:3100/udp"
+  volumes:
+    - ./rec:/recordings
+  environment:
+    - LANG=de_DE.UTF-8
+    #- vdr_uid=1000
+    #- vdr_gid=1000
+
