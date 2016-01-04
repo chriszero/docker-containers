@@ -1,26 +1,13 @@
-FROM phusion/baseimage
+FROM chriszero/ubuntu-s6-base
 MAINTAINER chriszero <zerov83@gmail.com>
 
-# Set correct environment variables.
-ENV DEBIAN_FRONTEND noninteractive
-
-ADD tvm-http.diff /tmp/
-ADD setup_epgd.sh /tmp/
+ADD src/* /tmp/
 RUN /tmp/setup_epgd.sh
 ADD configs/* /config/
 
-ENV LANG de_DE.UTF-8  
-ENV LANGUAGE de_DE:de  
-ENV LC_ALL de_DE.UTF-8
-
 # install runit scripts
-RUN mkdir /etc/service/epgd
-ADD epgd.sh /etc/service/epgd/run
-
-RUN mkdir /etc/service/epghttpd
-ADD epghttpd.sh /etc/service/epghttpd/run
-
-CMD ["/sbin/my_init"]
+ADD epgd.sh /etc/services.d/epgd/run
+ADD epghttpd.sh /etc/services.d/epghttpd/run
 
 EXPOSE 8888 9999
 

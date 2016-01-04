@@ -1,5 +1,9 @@
 FROM mariadb:5.5
 
+# Set your local timezone
+RUN echo "Europe/Berlin" > /etc/timezone && \
+    dpkg-reconfigure -f noninteractive tzdata
+
 RUN mkdir -p /tmp/epglv/src
 ADD epglv/* /tmp/epglv/
 ADD epglv/src/* /tmp/epglv/src/

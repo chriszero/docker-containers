@@ -1,10 +1,5 @@
 #!/bin/sh
 
-locale-gen de_DE.UTF-8
-export LANG="de_DE.UTF-8"  
-export LANGUAGE="de_DE:de"  
-export LC_ALL="de_DE.UTF-8"  
-
 apt-get update -qq
 apt-get install -qy build-essential \
 	git \
@@ -24,8 +19,6 @@ apt-get install -qy build-essential \
 	libimlib2 libimlib2-dev \
 	libjpeg8 libjpeg-dev \
 	python libpython2.7 libpython-dev python-dev \
-	mailutils
-
 
 
 # Compile and install
