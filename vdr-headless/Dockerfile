@@ -1,6 +1,8 @@
 FROM chriszero/ubuntu-s6-base
 MAINTAINER chriszero <zerov83@gmail.com>
 
+WORKDIR /tmp
+
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 272A2CE18103B360 F529E113D0A5897C \
  && echo deb http://ppa.launchpad.net/yavdr/main/ubuntu trusty main   > /etc/apt/sources.list.d/yavdr.list \
  && echo deb http://ppa.launchpad.net/yavdr/stable-vdr/ubuntu trusty main  >> /etc/apt/sources.list.d/yavdr.list \
@@ -27,15 +29,14 @@ RUN apt-get update -qq && \
 	nano && \
 	apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ADD https://github.com/chriszero/vdr-plugin-satip/archive/vdr-2.2.x.tar.gz /tmp
-RUN echo deb-src http://ppa.launchpad.net/yavdr/main/ubuntu trusty main   >> /etc/apt/sources.list.d/yavdr.list \
- && echo deb-src http://ppa.launchpad.net/yavdr/stable-vdr/ubuntu trusty main  >> /etc/apt/sources.list.d/yavdr.list
+ADD https://github.com/chriszero/vdr-plugin-satip/archive/vdr-2.2.x.tar.gz .
+RUN echo deb-src http://ppa.launchpad.net/yavdr/main/ubuntu trusty main >> /etc/apt/sources.list.d/yavdr.list \
+ && echo deb-src http://ppa.launchpad.net/yavdr/stable-vdr/ubuntu trusty main >> /etc/apt/sources.list.d/yavdr.list
 
 RUN apt-get update -qq && \
 	apt-get install -qy build-essential && \
 	apt-get build-dep -qy \
 	vdr-plugin-satip && \
-	cd /tmp && \	
 	tar xzf vdr-2.2.x.tar.gz && \
 	cd vdr-plugin-satip-vdr-2.2.x && \
 	make && make install && \
@@ -49,8 +50,8 @@ RUN apt-get update -qq && \
 	apt-get autoremove -qy $(apt-cache showsrc vdr-plugin-satip | sed -e '/Build-Depends/!d;s/Build-Depends: \|,\|([^)]*),*\|\[[^]]*\]//g') && \ 
 	apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ADD vdr-plugin-epg2vdr_0.1.12.git20151112.0816-0yavdr2~trustyubuntu1_amd64.deb /tmp
-RUN dpkg -i /tmp/vdr-plugin-epg2vdr*
+ADD vdr-plugin-epg2vdr_0.1.12.git20151112.0816-0yavdr2~trustyubuntu1_amd64.deb .
+RUN dpkg -i vdr-plugin-epg2vdr*
 
 ADD vdr.sh /etc/services.d/vdr/run
 ADD vdr-finish.sh /etc/services.d/vdr/finish
