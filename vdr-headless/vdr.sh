@@ -11,16 +11,6 @@ export LANG="de_DE.UTF-8"
 # chown -r /recordings only if owned by root. We asume that means it's a docker volume
 [ "$(stat -c %u:%g /recordings)" = "0:0" ] && chown vdr:vdr /recordings
 
-
-#if [ "$pipework_wait" ]; then
-#	for _pipework_if in $pipework_wait; do
-#		echo "Waiting for pipework to bring up $_pipework_if..."
-#		pipework --wait -i $_pipework_if
-#	done
-#	sleep 1
-#fi
-
-
 # Run vdr
 exec s6-setuidgid vdr vdr
 

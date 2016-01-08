@@ -1,0 +1,50 @@
+containers:
+  # preseed with your config files
+  vdr.config:
+    build:
+      context: vdr-config/.
+    image: chriszero/vdr.config
+      
+  vdr:
+    build: 
+      context: vdr-headless/.
+    image: chriszero/vdr-headless
+    run:
+      volume: ["rec:/recordings"]
+      volumes-from: ["vdr.config"]
+      link: ["database"]
+      publish: ["2004:2004", "3000:3000", "4010-4020:4010-4020/udp", "6419:6419", "8002:8002", "8008:8008"]
+      detach: true
+      restart: always
+
+  epgd:
+    image: chriszero/vdr-epgd 
+    run:
+      publish: ["9999:9999"]
+      link: ["database"]
+      detach: true
+      restart: always
+
+  database:
+    image: chriszero/mariadb-epglv
+    run:
+      publish: ["3306:3306"]
+      restart: always
+      detach: true
+      env:
+        - MYSQL_ROOT_PASSWORD=my-secret-pw
+
+# Instructions for 'crane' tool (https://github.com/michaelsauter/crane)
+
+# Build / Download
+# $ crane provision -v vdr.config vdr epgd database
+
+# Create instances
+# $ crane create -v vdr.config vdr epgd database
+
+# Start vdr
+# $ docker start vdr
+
+# Stop vdr
+# $ docker stop vdr
+
