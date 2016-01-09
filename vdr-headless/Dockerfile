@@ -30,6 +30,7 @@ RUN apt-get update -qq && \
 	apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ADD https://github.com/chriszero/vdr-plugin-satip/archive/vdr-2.2.x.tar.gz .
+#COPY vdr-satip-2.2.3.tgz .
 RUN echo deb-src http://ppa.launchpad.net/yavdr/main/ubuntu trusty main >> /etc/apt/sources.list.d/yavdr.list \
  && echo deb-src http://ppa.launchpad.net/yavdr/stable-vdr/ubuntu trusty main >> /etc/apt/sources.list.d/yavdr.list
 
@@ -38,7 +39,7 @@ RUN apt-get update -qq && \
 	apt-get build-dep -qy \
 	vdr-plugin-satip && \
 	tar xzf vdr-2.2.x.tar.gz && \
-	cd vdr-plugin-satip-vdr-2.2.x && \
+	cd vdr-plugin-satip* && \
 	make && make install && \
 	apt-get purge -qy binutils build-essential bzip2 cpp cpp-4.8 dpkg-dev fakeroot g++ g++-4.8 gcc \
 			  gcc-4.8 libalgorithm-diff-perl libalgorithm-diff-xs-perl \
@@ -60,6 +61,7 @@ ADD rsyslog.sh /etc/services.d/rsyslog/run
 # add configs
 ADD var/lib/vdr/* /var/lib/vdr/
 ADD var/lib/vdr/plugins/streamdev-server/* /var/lib/vdr/plugins/streamdev-server/
+RUN rm /etc/vdr/conf.d/*
 ADD etc/vdr/conf.d/* /etc/vdr/conf.d/
 ADD etc/rsyslog.conf /etc/
 
@@ -68,7 +70,7 @@ RUN groupmod -o -g 666 vdr \
  && usermod -o -u 666 vdr \
  && install -o vdr -g vdr -d /recordings /var/cache/vdr /var/lib/vdr
 
-EXPOSE 2004 3000 6419 8002 8008 4010-4020/udp
+EXPOSE 2004 3000 6419 8002 8008 4010-4020/udp 34890
 VOLUME /recordings /etc/vdr /var/lib/vdr
 
 ENTRYPOINT ["/init"]
